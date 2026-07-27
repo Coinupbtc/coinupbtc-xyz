@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<!--
+  coinupbtc.xyz — holding page.
+  Pseudonymous: no real name, phone, employer, school, or street address.
+
+  To turn this domain into something real, replace the <main> block below and push.
+  DNS never needs to change again.
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>coinupbtc.xyz</title>
+  <meta name="description" content="A workshop domain belonging to Coinupbtc. The main site is coinupbtc.com.">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#e8e4dc">
+  <meta name="robots" content="noindex">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="coinupbtc.xyz">
+  <meta property="og:description" content="A workshop domain. The main site is coinupbtc.com.">
+  <meta property="og:url" content="https://coinupbtc.xyz/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:site" content="@coinupbtc">
+
+  <link rel="canonical" href="https://coinupbtc.xyz/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2312141a'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* Same tokens as coinupbtc.com so the two domains read as one brand. */
+    :root {
+      --ink: #12141a;
+      --paper: #e8e4dc;
+      --acid: #c8f54a;
+      --mute: #5c6158;
+      --line: rgba(18, 20, 26, 0.18);
+      --font-display: Fraunces, Georgia, "Times New Roman", serif;
+      --font-body: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.45;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: clamp(1.25rem, 3vw, 2rem);
+      position: relative;
+      overflow-x: hidden;
+      isolation: isolate;
+    }
+
+    .field, .moire {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .field {
+      background:
+        radial-gradient(120% 80% at 85% 10%, rgba(200, 245, 74, 0.35), transparent 55%),
+        linear-gradient(165deg, #f3efe6 0%, #ddd6c8 48%, #cfc7b6 100%);
+    }
+
+    /* Coded motif — two interfering ring sets, same as the .com hero */
+    .moire {
+      inset: -25%;
+      opacity: 0.14;
+      -webkit-mask-image: radial-gradient(65% 55% at 80% 16%, #000 0%, transparent 72%);
+      mask-image: radial-gradient(65% 55% at 80% 16%, #000 0%, transparent 72%);
+    }
+
+    .moire::before, .moire::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-radial-gradient(circle at 80% 16%, var(--ink) 0 1px, transparent 1px 10px);
+    }
+
+    .moire::after {
+      background: repeating-radial-gradient(circle at 80% 16%, var(--ink) 0 1px, transparent 1px 10.6px);
+      animation: drift 34s linear infinite;
+    }
+
+    @keyframes drift {
+      from { transform: rotate(0deg) scale(1); }
+      50%  { transform: rotate(180deg) scale(1.04); }
+      to   { transform: rotate(360deg) scale(1); }
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .top strong { color: var(--ink); }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      max-width: min(92vw, 46ch);
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(2.6rem, 11vw, 6.5rem);
+      line-height: 0.9;
+      letter-spacing: -0.03em;
+      position: relative;
+      display: inline-block;
+      align-self: flex-start;
+    }
+
+    h1::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0.08em;
+      height: 0.16em;
+      background: var(--acid);
+      z-index: -1;
+    }
+
+    p {
+      margin-top: 1.5rem;
+      max-width: 44ch;
+      color: var(--mute);
+      font-size: clamp(0.9rem, 2vw, 1.05rem);
+    }
+
+    .links {
+      margin-top: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem 1.25rem;
+    }
+
+    .links a {
+      color: inherit;
+      font-size: 0.85rem;
+      text-decoration: none;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 0.15rem;
+    }
+
+    .links a.primary {
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      padding: 0.65rem 1rem;
+    }
+    .links a.primary:hover { background: #2a2e24; color: var(--acid); }
+    .links a:hover { color: #3a4a12; }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--mute);
+      border-top: 1px solid var(--line);
+      padding-top: 0.85rem;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .moire::after { animation: none !important; }
+    }
+
+    @media (max-width: 520px) {
+      footer { flex-direction: column; gap: 0.35rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="field" aria-hidden="true"></div>
+  <div class="moire" aria-hidden="true"></div>
+
+  <div class="top">
+    <strong>Coinupbtc</strong>
+    <span>workshop</span>
+  </div>
+
+  <main>
+    <h1>.xyz</h1>
+    <p>
+      A workshop domain — parked deliberately, not by a registrar. Whatever gets built
+      here next will show up without warning.
+    </p>
+    <div class="links">
+      <a class="primary" href="https://coinupbtc.com/">coinupbtc.com</a>
+      <a href="https://github.com/Coinupbtc">GitHub</a>
+      <a href="https://x.com/coinupbtc">X · @coinupbtc</a>
+    </div>
+  </main>
+
+  <footer>
+    <span>Pseudonymous</span>
+    <span>coinupbtc.xyz</span>
+  </footer>
+</body>
+</html>
