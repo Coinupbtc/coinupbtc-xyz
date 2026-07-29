@@ -1,23 +1,47 @@
-# coinupbtc.xyz
+# coinupbtc.xyz — the lab
 
 | | |
 |---|---|
-| **What it is** | The holding page for `coinupbtc.xyz`, a workshop domain. |
-| **What it's for** | Keep the domain under my control (not registrar parking) and make future use free. |
+| **What it is** | Four self-contained interactive demos, one per page. |
+| **What it's for** | Show the mechanism behind work done on my own hardware — not screenshots of it. |
 | **How to use it** | Open https://coinupbtc.xyz/ — or `./setup.sh` for a local preview. |
 
-The main site is **[coinupbtc.com](https://coinupbtc.com/)** ([repo](https://github.com/Coinupbtc/Coinupbtc.github.io)).
-This one is deliberately a stub.
+The landing site is **[coinupbtc.com](https://coinupbtc.com/)**
+([repo](https://github.com/Coinupbtc/Coinupbtc.github.io)). This domain is the part you can poke.
 
-## Why this exists as a repo instead of a redirect
+## The demos
 
-GitHub Pages allows **one custom domain per repository**, and `Coinupbtc.github.io` already
-claims `coinupbtc.com`. So `.xyz` needs either a registrar URL-forward or its own repo.
+| | Page | What it does |
+|---|---|---|
+| 01 | [`demos/mempool.html`](demos/mempool.html) | Simulated mempool. Transactions arrive, sort into fee bands, and race for space in the next four blocks. Set a fee rate and see which block takes you — or whether the cutoff climbs past you when demand rises. |
+| 02 | [`demos/spec-decode.html`](demos/spec-decode.html) | Speculative decoding. A small model guesses `k` tokens ahead, a big one verifies in a single pass. Plots speedup against draft length so the peak — and the decline past it — is visible. |
+| 03 | [`demos/render-cost.html`](demos/render-cost.html) | A real O(N) render bug, reproduced. 516 rows, one click, two implementations, **timed in your browser**. |
+| 04 | [`demos/moire.html`](demos/moire.html) | Two grids that almost agree. Detune or rotate one and the interference pattern appears. Includes the exact parameters of the motif in the site headers. |
 
-It gets its own repo because the domain's purpose is undecided. With DNS pointed at Pages
-**once**, every future decision — temp project host, a real site, a for-sale page — is a
-`git push`, with no DNS change and no propagation wait. A registrar forward would have to be
-torn down first.
+## Rules these pages follow
+
+- **One file each.** Every demo is a single HTML file with its CSS and JS inline. No backend,
+  no framework, no build step, no bundler, no dependencies beyond a webfont.
+- **No tracking.** No analytics, no cookies, no third-party scripts, no network calls at runtime.
+- **Numbers are measured, not asserted.** Demo 03 times the visitor's own machine and prints what
+  it finds. Where a model is a simplification, the page says so and lists what it leaves out.
+- **Motion is optional.** Every animation respects `prefers-reduced-motion`.
+
+## Notes worth keeping
+
+**Demo 03 — timer resolution is a trap.** The fast path runs far under the clock's resolution, and
+browsers deliberately coarsen `performance.now()` to resist fingerprinting (Brave quantises to
+100µs). Timing a single call, or even a fixed batch, can land inside one tick and read `0.00` —
+which would make the headline ratio a fabrication. The page grows the batch until the total clears
+the timer floor by a wide margin, then divides. It also caps the slow path against a 4-second
+budget so a 2048-row run cannot lock the tab, and races `requestAnimationFrame` against a timer so
+a backgrounded tab cannot stall the run forever.
+
+**Demo 01 — the simulation is calibrated, not decorative.** Arrival volume is tuned against block
+drain so that "Busy" holds the backlog roughly steady; the demand slider therefore genuinely decides
+whether the mempool grows or clears, and the cutoff moves with it. Each moving dot carries a bundle
+of transactions rather than one, because drawing them individually would put tens of thousands of
+rectangles on screen for no extra information.
 
 ## Try it
 
@@ -28,10 +52,7 @@ cd coinupbtc-xyz
 # → http://127.0.0.1:8766/
 ```
 
-## Turning it into something real
-
-Replace the `<main>` block in `index.html` and push. That's the whole procedure.
-Drop the `<meta name="robots" content="noindex">` when you want it indexed.
+Or open `index.html` directly — the demos work from `file://` too.
 
 ## Contact policy
 
@@ -40,9 +61,9 @@ Inbound: [GitHub](https://github.com/Coinupbtc) · [X @coinupbtc](https://x.com/
 
 ## Stack
 
-One self-contained HTML file — styles inlined on purpose, so changing it is a one-file edit.
-Design tokens match `coinupbtc.com`. The motif is pure CSS (two interfering ring sets).
-No trackers, no cookies, no analytics, no JavaScript.
+Static HTML, one file per page. Fraunces + IBM Plex Mono via Google Fonts. Design tokens match
+`coinupbtc.com` so the two domains read as one brand. The header motif is pure CSS — two
+`repeating-radial-gradient` ring sets, no image and no JavaScript.
 
 ## Custom domain
 

@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<!--
+  13s -> 7.5ms — a real render bug, reproduced in the browser.
+
+  Self-contained: no backend, no framework, no build step, no tracking.
+  The numbers this page prints are measured on YOUR machine, not mine.
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>13s → 7.5ms — the lab</title>
+  <meta name="description" content="A real O(N) render bug reproduced in the browser: 516 rows, one click, two implementations, timed live.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0e13">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c; --ink-3: #191d26;
+      --paper: #ece8df; --acid: #c8f54a; --hot: #ff6b5e;
+      --mute: #8b9287; --dim: #5f6660;
+      --line: rgba(236,232,223,.14); --line-soft: rgba(236,232,223,.07);
+      --font-display: Fraunces, Georgia, serif;
+      --font-body: "IBM Plex Mono", ui-monospace, monospace;
+      --pad: clamp(1.15rem, 4vw, 3.5rem);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); background: var(--ink); color: var(--paper);
+      line-height: 1.55; min-height: 100svh; display: flex; flex-direction: column;
+    }
+    a { color: inherit; text-underline-offset: 4px; transition: color .18s ease; }
+    a:hover { color: var(--acid); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+
+    .top {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute);
+      padding: 1.4rem 0; border-bottom: 1px solid var(--line-soft);
+    }
+    .top a { text-decoration: none; }
+
+    header { padding-block: clamp(2.2rem, 6vw, 3.6rem) 1.6rem; }
+    .idx { font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+    h1 {
+      font-family: var(--font-display); font-weight: 700; letter-spacing: -.03em;
+      font-size: clamp(2rem, 6.5vw, 3.6rem); line-height: 1; margin-top: .5rem;
+    }
+    .lede { margin-top: 1.2rem; max-width: 68ch; color: #d6d3ca; font-size: .92rem; line-height: 1.75; }
+    .lede b { color: var(--paper); font-weight: 500; }
+
+    main { flex: 1; padding-bottom: clamp(3rem, 7vw, 5rem); }
+
+    .panel {
+      border: 1px solid var(--line-soft); background: var(--ink-2);
+      padding: clamp(1.1rem, 3vw, 1.7rem); margin-top: 1.6rem;
+    }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 1.4rem 2rem; align-items: flex-end; }
+    .ctl { display: flex; flex-direction: column; gap: .45rem; min-width: 210px; flex: 1; }
+    .ctl label { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+    .ctl .val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .ctl .val span { color: var(--acid); }
+    input[type=range] { width: 100%; accent-color: var(--acid); cursor: pointer; }
+
+    .btn {
+      font: inherit; font-size: .82rem; background: var(--acid); color: var(--ink);
+      border: none; padding: .8rem 1.3rem; cursor: pointer; font-weight: 500;
+      transition: background .18s ease, transform .18s ease;
+    }
+    .btn:hover:not(:disabled) { background: #d9ff63; transform: translateY(-2px); }
+    .btn:disabled { opacity: .45; cursor: progress; transform: none; }
+    .btn.ghost { background: none; color: var(--paper); border: 1px solid var(--line); }
+    .btn.ghost:hover:not(:disabled) { border-color: var(--acid); color: var(--acid); background: none; }
+
+    .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px,100%),1fr)); gap: 1px; background: var(--line-soft); margin-top: 1.6rem; border: 1px solid var(--line-soft); }
+    .res { background: var(--ink); padding: 1.3rem; }
+    .res dt { font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute); }
+    .res dd { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.6rem,4.5vw,2.3rem); line-height: 1.05; margin-top: .5rem; letter-spacing: -.02em; }
+    .res .unit { font-size: .55em; color: var(--mute); }
+    .res.bad dd { color: var(--hot); }
+    .res.good dd { color: var(--acid); }
+    .res p { font-size: .72rem; color: var(--dim); margin-top: .5rem; line-height: 1.55; }
+
+    .bars { margin-top: 1.6rem; display: grid; gap: .7rem; }
+    .bar-row { display: grid; grid-template-columns: 8.5rem 1fr auto; gap: .9rem; align-items: center; font-size: .76rem; }
+    .bar-track { background: var(--ink-3); height: 1.5rem; position: relative; overflow: hidden; }
+    .bar-fill { position: absolute; inset: 0 auto 0 0; width: 0; transition: width .5s cubic-bezier(.2,.6,.2,1); }
+    .bar-fill.bad { background: var(--hot); }
+    .bar-fill.good { background: var(--acid); }
+    .bar-row .n { color: var(--mute); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    @media (max-width: 560px) { .bar-row { grid-template-columns: 6rem 1fr auto; font-size: .7rem; } }
+
+    /* The table under test */
+    .stage { margin-top: 1.6rem; border: 1px solid var(--line-soft); }
+    .stage-head {
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      padding: .7rem 1rem; border-bottom: 1px solid var(--line-soft);
+      font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute);
+      background: var(--ink-2);
+    }
+    #table { height: 260px; overflow-y: auto; background: var(--ink); }
+    .row {
+      display: grid; grid-template-columns: 4.5rem 1fr 6rem 5rem; gap: .8rem;
+      padding: .4rem 1rem; font-size: .74rem; border-bottom: 1px solid rgba(236,232,223,.04);
+      cursor: pointer; align-items: baseline;
+    }
+    .row:hover { background: var(--ink-2); }
+    .row.sel { background: rgba(200,245,74,.14); box-shadow: inset 3px 0 0 var(--acid); }
+    .row .c-id { color: var(--dim); font-variant-numeric: tabular-nums; }
+    .row .c-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row .c-num { text-align: right; font-variant-numeric: tabular-nums; color: var(--mute); }
+    .row .c-edge { text-align: right; font-variant-numeric: tabular-nums; color: var(--acid); }
+
+    .story { margin-top: clamp(2.4rem, 6vw, 3.6rem); max-width: 72ch; }
+    .story h2 {
+      font-family: var(--font-display); font-weight: 700; letter-spacing: -.02em;
+      font-size: clamp(1.3rem, 3.4vw, 1.9rem); margin-bottom: .9rem;
+    }
+    .story p { color: var(--mute); font-size: .87rem; line-height: 1.8; margin-bottom: 1rem; }
+    .story strong { color: var(--paper); font-weight: 500; }
+    .story code {
+      background: var(--ink-2); border: 1px solid var(--line-soft);
+      padding: .12rem .4rem; font-size: .85em; color: var(--acid);
+    }
+    .callout {
+      border-left: 2px solid var(--acid); padding: .2rem 0 .2rem 1.1rem;
+      margin: 1.4rem 0; color: #d6d3ca; font-size: .87rem; line-height: 1.8;
+    }
+
+    footer {
+      border-top: 1px solid var(--line-soft); padding: 1.7rem 0;
+      font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+    }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bar-fill, .btn { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap top">
+    <a href="../index.html">← the lab</a>
+    <span>coinupbtc.xyz</span>
+  </div>
+
+  <header class="wrap">
+    <p class="idx">Demo 03</p>
+    <h1>13s → 7.5ms</h1>
+    <p class="lede">
+      A card-arbitrage table had 516 rows. Clicking one to select it took <b>13 seconds</b>.
+      The cause was not the data, the filtering, or the machine — it was that selecting a row
+      rebuilt every row, and read layout back from the DOM on each one. Below is the same bug
+      and the same fix, reproduced here. <b>Your browser does the timing.</b>
+    </p>
+  </header>
+
+  <main class="wrap">
+    <div class="panel">
+      <div class="controls">
+        <div class="ctl">
+          <label for="rows">Rows in the table</label>
+          <div class="val" id="rowsVal">516</div>
+          <input type="range" id="rows" min="64" max="2048" step="4" value="516">
+        </div>
+        <div class="ctl">
+          <label for="reps">Clicks per run (median)</label>
+          <div class="val" id="repsVal">5</div>
+          <input type="range" id="reps" min="1" max="15" step="2" value="5">
+        </div>
+        <div class="ctl" style="flex-direction:row; gap:.6rem; align-items:center; min-width:0">
+          <button class="btn" id="run">Run both →</button>
+          <button class="btn ghost" id="reset">Reset</button>
+        </div>
+      </div>
+
+      <dl class="results">
+        <div class="res bad">
+          <dt>Rebuild everything</dt>
+          <dd><span id="slowMs">—</span> <span class="unit">ms</span></dd>
+          <p>Regenerate all rows, then read layout back per row.</p>
+        </div>
+        <div class="res good">
+          <dt>Touch what changed</dt>
+          <dd><span id="fastMs">—</span> <span class="unit">ms</span></dd>
+          <p>Two class changes, one layout read at the end.</p>
+        </div>
+        <div class="res">
+          <dt>Gap</dt>
+          <dd><span id="ratio">—</span><span class="unit">×</span></dd>
+          <p id="ratioNote">Run it to find out what your machine does.</p>
+        </div>
+      </dl>
+
+      <div class="bars" id="bars" hidden>
+        <div class="bar-row">
+          <span>Rebuild</span>
+          <div class="bar-track"><div class="bar-fill bad" id="barSlow"></div></div>
+          <span class="n" id="nSlow">—</span>
+        </div>
+        <div class="bar-row">
+          <span>Targeted</span>
+          <div class="bar-track"><div class="bar-fill good" id="barFast"></div></div>
+          <span class="n" id="nFast">—</span>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="stage-head">
+          <span id="stageLabel">Live table — click any row</span>
+          <span id="stageCount">512 rows</span>
+        </div>
+        <div id="table" role="grid" aria-label="Rows under test"></div>
+      </div>
+    </div>
+
+    <section class="story">
+      <h2>What actually went wrong</h2>
+      <p>
+        The handler did the obvious thing: mark the clicked row as selected, then re-render the
+        table so the highlight shows up. Re-rendering meant building all 516 rows again. That
+        alone is <code>O(N)</code> work for an <code>O(1)</code> change, which is wasteful but
+        survivable.
+      </p>
+      <p>
+        What made it <strong>13 seconds</strong> instead of 30 milliseconds was the second
+        mistake: each row's size was read back out of the layout engine immediately after it
+        was written. Writing invalidates layout; reading forces it to be recomputed on the spot.
+        Do both in a loop and the browser recalculates the whole document once per row —
+        <strong>516 full layout passes for one click.</strong>
+      </p>
+      <div class="callout">
+        The fix was not an optimisation. It was deleting work: stop rebuilding rows that did not
+        change, and stop asking for layout inside the loop. The click went to
+        <strong>7.5&nbsp;ms</strong> — flat, and no longer sensitive to row count.
+      </div>
+      <p>
+        Drag <strong>rows</strong> up and run it again. The red bar should grow with the row
+        count — roughly quadratically, since the per-row cost also rises as the document gets
+        bigger. The green bar should barely move: it does the same two class changes whether
+        there are 64 rows or 2048.
+      </p>
+      <p>
+        <strong>An honest note on the numbers.</strong> The original 13.0&nbsp;s → 7.5&nbsp;ms was
+        measured in a Python desktop UI, not in a browser, so the absolute figures here will not
+        match — your machine, your engine, and a much lighter row are all different. What
+        reproduces is the <em>shape</em>: an O(1) change priced as O(N), amplified by synchronous
+        layout reads, and a fix that is subtraction rather than cleverness.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><a href="../index.html">← the lab</a></span>
+      <span><a href="https://coinupbtc.com/">coinupbtc.com</a></span>
+      <span>Runs entirely in your browser</span>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var table     = document.getElementById("table");
+    var rowsInput = document.getElementById("rows");
+    var repsInput = document.getElementById("reps");
+    var runBtn    = document.getElementById("run");
+    var resetBtn  = document.getElementById("reset");
+
+    var SETS = ["Base", "Evolving", "Jungle", "Fossil", "Neo", "Aquapolis", "Skyridge", "Legend"];
+    var GRADE = ["raw", "PSA 8", "PSA 9", "PSA 10", "CGC 9", "BGS 9.5"];
+
+    var data = [];
+    var selected = 0;
+
+    /* Deterministic pseudo-random so every run works on identical data. */
+    function seeded(n) {
+      var s = 0;
+      return function () {
+        s = (s * 1664525 + 1013904223 + n) % 4294967296;
+        return s / 4294967296;
+      };
+    }
+
+    function build(n) {
+      var rnd = seeded(n);
+      data = new Array(n);
+      for (var i = 0; i < n; i++) {
+        var buy = 4 + rnd() * 240;
+        var sell = buy * (0.7 + rnd() * 0.95);
+        data[i] = {
+          id: i,
+          name: SETS[(rnd() * SETS.length) | 0] + " #" + (1 + ((rnd() * 250) | 0)) +
+                " · " + GRADE[(rnd() * GRADE.length) | 0],
+          buy: buy,
+          edge: ((sell - buy) / buy) * 100
+        };
+      }
+      selected = 0;
+    }
+
+    /* ── The slow path ────────────────────────────────────────────
+       Rebuild every row, and read layout back inside the loop. The
+       read is what turns O(N) work into O(N) forced layout passes. */
+    function renderRebuild(sel) {
+      table.textContent = "";
+      var sink = 0;
+      for (var i = 0; i < data.length; i++) {
+        var d = data[i];
+        var row = document.createElement("div");
+        row.className = "row" + (i === sel ? " sel" : "");
+        row.dataset.id = i;
+
+        var a = document.createElement("span"); a.className = "c-id";   a.textContent = "#" + d.id;
+        var b = document.createElement("span"); b.className = "c-name"; b.textContent = d.name;
+        var c = document.createElement("span"); c.className = "c-num";  c.textContent = "$" + d.buy.toFixed(2);
+        var e = document.createElement("span"); e.className = "c-edge"; e.textContent = d.edge.toFixed(1) + "%";
+
+        row.appendChild(a); row.appendChild(b); row.appendChild(c); row.appendChild(e);
+        table.appendChild(row);
+
+        // The mistake: write, then immediately read layout back.
+        sink += row.offsetHeight;
+      }
+      return sink;
+    }
+
+    /* ── The fast path ────────────────────────────────────────────
+       Touch only the two rows whose state actually changed. */
+    function renderTargeted(prev, next) {
+      var was = table.children[prev];
+      var now = table.children[next];
+      if (was) was.classList.remove("sel");
+      if (now) now.classList.add("sel");
+      return table.offsetHeight;   // one read, after the writes
+    }
+
+    function median(xs) {
+      var s = xs.slice().sort(function (a, b) { return a - b; });
+      var m = s.length >> 1;
+      return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+    }
+
+    function fmt(ms) {
+      if (ms >= 1000) return (ms / 1000).toFixed(2) + " s";
+      if (ms >= 10)   return ms.toFixed(0) + " ms";
+      if (ms >= 1)    return ms.toFixed(1) + " ms";
+      if (ms >= 0.01) return ms.toFixed(3) + " ms";
+      return (ms * 1000).toFixed(1) + " µs";
+    }
+
+    function setRows(n) {
+      document.getElementById("rowsVal").textContent = n;
+      document.getElementById("stageCount").textContent = n + " rows";
+      build(n);
+      renderRebuild(0);            // seed the table once, untimed
+    }
+
+    /* Let the browser paint between phases so timings are not fighting
+       each other for the same frame. rAF is throttled in background tabs and
+       does not fire at all in some headless contexts, so race it against a
+       timer — the run must never be able to stall forever. */
+    function nextFrame() {
+      return new Promise(function (r) {
+        var done = false;
+        function fin() { if (!done) { done = true; r(); } }
+        requestAnimationFrame(function () { setTimeout(fin, 0); });
+        setTimeout(fin, 50);
+      });
+    }
+
+    async function run() {
+      var reps = Number(repsInput.value);
+      var n = Number(rowsInput.value);
+
+      runBtn.disabled = true;
+      resetBtn.disabled = true;
+      document.getElementById("stageLabel").textContent = "Measuring…";
+      await nextFrame();
+
+      build(n);
+
+      /* One untimed rebuild to warm caches, then one timed probe so we can
+         budget the run. At 2048 rows the slow path costs seconds per click,
+         and 15 of those back to back would lock the tab for minutes. */
+      renderRebuild(0);
+      await nextFrame();
+      var probeStart = performance.now();
+      renderRebuild(1);
+      var probe = performance.now() - probeStart;
+      await nextFrame();
+
+      var budgetMs = 4000;
+      var allowed = Math.max(1, Math.floor(budgetMs / Math.max(probe, 1)));
+      var capped = Math.min(reps, allowed);
+
+      var slow = [probe], fast = [], i, t0, pick;
+
+      for (i = 1; i < capped; i++) {
+        pick = (i * 37) % n;
+        t0 = performance.now();
+        renderRebuild(pick);
+        slow.push(performance.now() - t0);
+        await nextFrame();
+      }
+      reps = capped;
+
+      selected = 0;
+      renderRebuild(0);
+      await nextFrame();
+
+      /* The fast path finishes far under the timer's resolution — and browsers
+         deliberately coarsen performance.now() (Brave quantises to 100µs) to
+         resist fingerprinting. Timing one call, or even a fixed batch, can
+         land inside a single tick and read 0.00, which would make the ratio a
+         lie. So grow the batch until the total clears the timer floor by a
+         wide margin, then divide. Resolution-independent by construction. */
+      var FAST_BATCH = 256;
+      var prev = 0, elapsed = 0;
+      while (true) {
+        t0 = performance.now();
+        for (i = 0; i < FAST_BATCH; i++) {
+          pick = (i * 37) % n;
+          renderTargeted(prev, pick);
+          prev = pick;
+        }
+        elapsed = performance.now() - t0;
+        if (elapsed >= 25 || FAST_BATCH >= 262144) break;
+        FAST_BATCH *= 4;
+        await nextFrame();
+      }
+      fast.push(elapsed / FAST_BATCH);
+      await nextFrame();
+
+      var ms = median(slow), mf = median(fast);
+      document.getElementById("slowMs").textContent = ms >= 1000 ? (ms / 1000).toFixed(2) : ms.toFixed(0);
+      document.querySelector(".res.bad .unit").textContent = ms >= 1000 ? "s" : "ms";
+
+      var fastCell = document.getElementById("fastMs");
+      var fastUnit = document.querySelector(".res.good .unit");
+      if (mf < 0.1)  { fastCell.textContent = (mf * 1000).toFixed(1); fastUnit.textContent = "µs"; }
+      else           { fastCell.textContent = mf.toFixed(3);          fastUnit.textContent = "ms"; }
+
+      var ratioCell = document.getElementById("ratio");
+      if (mf > 0) {
+        var ratio = ms / mf;
+        ratioCell.textContent = ratio >= 100 ? Math.round(ratio).toLocaleString() : ratio.toFixed(1);
+      } else {
+        ratioCell.textContent = "—";   // below the timer floor; refuse to invent one
+      }
+      document.getElementById("ratioNote").textContent =
+        "Rebuild: median of " + reps + (reps === 1 ? " click" : " clicks") +
+        (capped < Number(repsInput.value) ? " (capped to stay under 4s of blocking)" : "") +
+        ". Targeted: mean over " + FAST_BATCH.toLocaleString() + " updates — a single call lands under the timer’s floor.";
+
+      var bars = document.getElementById("bars");
+      bars.hidden = false;
+      document.getElementById("barSlow").style.width = "100%";
+      document.getElementById("barFast").style.width = Math.max(0.4, (mf / ms) * 100) + "%";
+      document.getElementById("nSlow").textContent = fmt(ms);
+      document.getElementById("nFast").textContent = fmt(mf);
+
+      document.getElementById("stageLabel").textContent = "Live table — click any row";
+      runBtn.disabled = false;
+      resetBtn.disabled = false;
+    }
+
+    /* Clicking a row uses the fast path — this table is the fixed one. */
+    table.addEventListener("click", function (e) {
+      var row = e.target.closest(".row");
+      if (!row) return;
+      var next = Number(row.dataset.id);
+      renderTargeted(selected, next);
+      selected = next;
+    });
+
+    rowsInput.addEventListener("input", function () {
+      document.getElementById("rowsVal").textContent = rowsInput.value;
+    });
+    rowsInput.addEventListener("change", function () { setRows(Number(rowsInput.value)); });
+    repsInput.addEventListener("input", function () {
+      document.getElementById("repsVal").textContent = repsInput.value;
+    });
+
+    runBtn.addEventListener("click", run);
+    resetBtn.addEventListener("click", function () {
+      document.getElementById("bars").hidden = true;
+      ["slowMs", "fastMs", "ratio"].forEach(function (id) {
+        document.getElementById(id).textContent = "—";
+      });
+      document.querySelector(".res.bad .unit").textContent = "ms";
+      document.querySelector(".res.good .unit").textContent = "ms";
+      document.getElementById("ratioNote").textContent = "Run it to find out what your machine does.";
+      setRows(Number(rowsInput.value));
+    });
+
+    setRows(516);
+  })();
+  </script>
+</body>
+</html>

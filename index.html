@@ -1,30 +1,29 @@
 <!doctype html>
 <html lang="en">
 <!--
-  coinupbtc.xyz — holding page.
+  coinupbtc.xyz — the lab.
   Pseudonymous: no real name, phone, employer, school, or street address.
 
-  To turn this domain into something real, replace the <main> block below and push.
-  DNS never needs to change again.
+  Every demo under /demos/ is a single self-contained file: no backend, no
+  framework, no build step, no tracking. View source on any of them.
 -->
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>coinupbtc.xyz</title>
-  <meta name="description" content="A workshop domain belonging to Coinupbtc. The main site is coinupbtc.com.">
-  <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#e8e4dc">
-  <meta name="robots" content="noindex">
+  <title>The lab — coinupbtc.xyz</title>
+  <meta name="description" content="Four self-contained interactive demos from a local AI workshop: a mempool fee-band router, a speculative decoding model, a render-cost reproduction, and a moiré bench.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0e13">
 
   <meta property="og:type" content="website">
-  <meta property="og:title" content="coinupbtc.xyz">
-  <meta property="og:description" content="A workshop domain. The main site is coinupbtc.com.">
+  <meta property="og:title" content="The lab — coinupbtc.xyz">
+  <meta property="og:description" content="Four things I measured or fixed, cut down until each fits in one file you can read.">
   <meta property="og:url" content="https://coinupbtc.xyz/">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:site" content="@coinupbtc">
 
   <link rel="canonical" href="https://coinupbtc.xyz/">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2312141a'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,190 +32,259 @@
   <style>
     /* Same tokens as coinupbtc.com so the two domains read as one brand. */
     :root {
-      --ink: #12141a;
-      --paper: #e8e4dc;
+      --ink: #0c0e13;
+      --ink-2: #12151c;
+      --paper: #ece8df;
       --acid: #c8f54a;
-      --mute: #5c6158;
-      --line: rgba(18, 20, 26, 0.18);
+      --mute: #8b9287;
+      --dim: #5f6660;
+      --line: rgba(236, 232, 223, 0.14);
+      --line-soft: rgba(236, 232, 223, 0.07);
       --font-display: Fraunces, Georgia, "Times New Roman", serif;
       --font-body: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+      --pad: clamp(1.15rem, 4vw, 4rem);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: var(--font-body);
-      background: var(--paper);
-      color: var(--ink);
-      line-height: 1.45;
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      padding: clamp(1.25rem, 3vw, 2rem);
-      position: relative;
+      background: var(--ink);
+      color: var(--paper);
+      line-height: 1.5;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
       overflow-x: hidden;
+      position: relative;
       isolation: isolate;
     }
 
-    .field, .moire {
-      position: absolute;
-      inset: 0;
-      z-index: -1;
-      pointer-events: none;
-    }
+    a { color: inherit; text-underline-offset: 4px; transition: color .18s ease; }
+    a:hover { color: var(--acid); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
 
-    .field {
-      background:
-        radial-gradient(120% 80% at 85% 10%, rgba(200, 245, 74, 0.35), transparent 55%),
-        linear-gradient(165deg, #f3efe6 0%, #ddd6c8 48%, #cfc7b6 100%);
+    .skip-link {
+      position: absolute; left: -9999px; top: 0;
+      background: var(--acid); color: var(--ink); padding: .6rem .9rem; z-index: 50;
     }
+    .skip-link:focus { left: .5rem; top: .5rem; }
 
     /* Coded motif — two interfering ring sets, same as the .com hero */
     .moire {
+      position: fixed;
       inset: -25%;
-      opacity: 0.14;
-      -webkit-mask-image: radial-gradient(65% 55% at 80% 16%, #000 0%, transparent 72%);
-      mask-image: radial-gradient(65% 55% at 80% 16%, #000 0%, transparent 72%);
+      z-index: -1;
+      opacity: .13;
+      pointer-events: none;
+      -webkit-mask-image: radial-gradient(62% 52% at 82% 12%, #000 0%, transparent 72%);
+      mask-image: radial-gradient(62% 52% at 82% 12%, #000 0%, transparent 72%);
     }
-
     .moire::before, .moire::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: repeating-radial-gradient(circle at 80% 16%, var(--ink) 0 1px, transparent 1px 10px);
+      content: ""; position: absolute; inset: 0;
+      background: repeating-radial-gradient(circle at 82% 12%, var(--acid) 0 1px, transparent 1px 10px);
     }
-
     .moire::after {
-      background: repeating-radial-gradient(circle at 80% 16%, var(--ink) 0 1px, transparent 1px 10.6px);
-      animation: drift 34s linear infinite;
+      background: repeating-radial-gradient(circle at 82% 12%, var(--acid) 0 1px, transparent 1px 10.6px);
+      animation: drift 38s linear infinite;
     }
-
     @keyframes drift {
       from { transform: rotate(0deg) scale(1); }
       50%  { transform: rotate(180deg) scale(1.04); }
       to   { transform: rotate(360deg) scale(1); }
     }
 
-    .top {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 1rem;
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--mute);
-    }
-    .top strong { color: var(--ink); }
+    .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
 
-    main {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      max-width: min(92vw, 46ch);
+    .top {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute);
+      padding: clamp(1.15rem, 3vw, 2.1rem) 0;
     }
+    .top strong { color: var(--paper); font-weight: 500; letter-spacing: .1em; }
+    .top a { text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: .1rem; }
+
+    header.hero { padding-block: clamp(2.5rem, 9vw, 6rem) clamp(2rem, 6vw, 3.5rem); }
 
     h1 {
       font-family: var(--font-display);
       font-weight: 700;
       font-size: clamp(2.6rem, 11vw, 6.5rem);
-      line-height: 0.9;
-      letter-spacing: -0.03em;
+      line-height: .88;
+      letter-spacing: -.035em;
       position: relative;
       display: inline-block;
-      align-self: flex-start;
     }
-
     h1::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0.08em;
-      height: 0.16em;
-      background: var(--acid);
-      z-index: -1;
+      content: ""; position: absolute; left: -.02em; right: -.02em;
+      bottom: .1em; height: .14em; background: var(--acid); z-index: -1;
     }
 
-    p {
-      margin-top: 1.5rem;
-      max-width: 44ch;
-      color: var(--mute);
-      font-size: clamp(0.9rem, 2vw, 1.05rem);
+    .lede {
+      margin-top: 1.8rem;
+      max-width: 56ch;
+      color: #d6d3ca;
+      font-size: clamp(.92rem, 2.2vw, 1.08rem);
+      line-height: 1.7;
+    }
+    .lede b { color: var(--paper); font-weight: 500; }
+
+    main { flex: 1; }
+
+    .grid {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr));
+      gap: 1px;
+      background: var(--line-soft);
+      border: 1px solid var(--line-soft);
+      margin-bottom: clamp(3rem, 8vw, 5rem);
     }
 
-    .links {
-      margin-top: 2rem;
+    .card { background: var(--ink); position: relative; }
+    .card a {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.75rem 1.25rem;
-    }
-
-    .links a {
-      color: inherit;
-      font-size: 0.85rem;
+      flex-direction: column;
+      gap: .75rem;
+      height: 100%;
+      padding: clamp(1.5rem, 3.5vw, 2.2rem);
       text-decoration: none;
-      border-bottom: 2px solid var(--ink);
-      padding-bottom: 0.15rem;
+      transition: background .2s ease;
+    }
+    .card a:hover { background: var(--ink-2); color: inherit; }
+    .card a:hover .name { color: var(--acid); }
+
+    .card .idx {
+      font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
+    }
+    .card .name {
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 3.2vw, 1.75rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -.02em;
+      transition: color .18s ease;
+    }
+    .card .what { color: var(--mute); font-size: .84rem; line-height: 1.65; flex: 1; }
+    .card .tag {
+      font-size: .7rem;
+      color: var(--acid);
+      letter-spacing: .04em;
+      border-top: 1px solid var(--line-soft);
+      padding-top: .75rem;
+      margin-top: .3rem;
     }
 
-    .links a.primary {
-      background: var(--ink);
-      color: var(--paper);
-      border: none;
-      padding: 0.65rem 1rem;
+    .note {
+      max-width: 62ch;
+      color: var(--mute);
+      font-size: .82rem;
+      line-height: 1.75;
+      margin-bottom: clamp(1.6rem, 4vw, 2.4rem);
     }
-    .links a.primary:hover { background: #2a2e24; color: var(--acid); }
-    .links a:hover { color: #3a4a12; }
+    .note strong { color: var(--paper); font-weight: 500; }
 
     footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      font-size: 0.7rem;
-      letter-spacing: 0.06em;
+      border-top: 1px solid var(--line-soft);
+      padding: 1.8rem 0;
+      font-size: .68rem;
+      letter-spacing: .1em;
       text-transform: uppercase;
-      color: var(--mute);
-      border-top: 1px solid var(--line);
-      padding-top: 0.85rem;
+      color: var(--dim);
     }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
 
     @media (prefers-reduced-motion: reduce) {
       .moire::after { animation: none !important; }
-    }
-
-    @media (max-width: 520px) {
-      footer { flex-direction: column; gap: 0.35rem; }
+      .card a, .card .name { transition: none; }
     }
   </style>
 </head>
 <body>
-  <div class="field" aria-hidden="true"></div>
+  <a class="skip-link" href="#main">Skip to content</a>
   <div class="moire" aria-hidden="true"></div>
 
-  <div class="top">
+  <div class="wrap top">
     <strong>Coinupbtc</strong>
-    <span>workshop</span>
+    <a href="https://coinupbtc.com/">coinupbtc.com →</a>
   </div>
 
-  <main>
-    <h1>.xyz</h1>
-    <p>
-      A workshop domain — parked deliberately, not by a registrar. Whatever gets built
-      here next will show up without warning.
+  <header class="hero wrap">
+    <h1>The lab</h1>
+    <p class="lede">
+      Four things I measured or fixed on my own hardware, cut down until each one fits in
+      <b>a single file you can read</b>. No backend, no framework, no build step, no tracking —
+      every demo runs entirely in your browser, and the last one measures <i>your</i> machine,
+      not mine.
     </p>
-    <div class="links">
-      <a class="primary" href="https://coinupbtc.com/">coinupbtc.com</a>
-      <a href="https://github.com/Coinupbtc">GitHub</a>
-      <a href="https://x.com/coinupbtc">X · @coinupbtc</a>
-    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <p class="note">
+      These are not screenshots of tools. They are the actual mechanisms, reimplemented small:
+      the fee-band routing behind a mempool visualiser, the arithmetic that decides how many
+      tokens a draft model should guess, the render bug that made a click take
+      <strong>13 seconds</strong>, and the interference pattern used as the motif on both sites.
+    </p>
+
+    <ul class="grid">
+      <li class="card">
+        <a href="demos/mempool.html">
+          <span class="idx">01</span>
+          <span class="name">Fee-band router</span>
+          <span class="what">
+            Transactions arrive, get sorted into fee bands, and race for space in the next
+            few blocks. Set your own fee rate and watch which block — if any — takes you.
+          </span>
+          <span class="tag">canvas · simulated mempool</span>
+        </a>
+      </li>
+
+      <li class="card">
+        <a href="demos/spec-decode.html">
+          <span class="idx">02</span>
+          <span class="name">Speculative decoding</span>
+          <span class="what">
+            A small model guesses ahead, a big model checks its work. Drag the draft length
+            and the acceptance rate to find where the speedup peaks — and where guessing
+            more starts costing you.
+          </span>
+          <span class="tag">the curve has a maximum</span>
+        </a>
+      </li>
+
+      <li class="card">
+        <a href="demos/render-cost.html">
+          <span class="idx">03</span>
+          <span class="name">13s → 7.5ms</span>
+          <span class="what">
+            A real render bug, reproduced. 516 rows, one click, two implementations. Your
+            browser times both and prints the gap — no numbers of mine involved.
+          </span>
+          <span class="tag">measures your machine</span>
+        </a>
+      </li>
+
+      <li class="card">
+        <a href="demos/moire.html">
+          <span class="idx">04</span>
+          <span class="name">Moiré bench</span>
+          <span class="what">
+            Two grids, slightly disagreeing. Rotate and detune them to raise interference
+            patterns out of nothing — including the exact motif behind the header above.
+          </span>
+          <span class="tag">canvas · pure geometry</span>
+        </a>
+      </li>
+    </ul>
   </main>
 
   <footer>
-    <span>Pseudonymous</span>
-    <span>coinupbtc.xyz</span>
+    <div class="wrap">
+      <span>Pseudonymous</span>
+      <span><a href="https://github.com/Coinupbtc">GitHub</a> · <a href="https://x.com/coinupbtc">X</a></span>
+      <span>coinupbtc.xyz</span>
+    </div>
   </footer>
 </body>
 </html>
