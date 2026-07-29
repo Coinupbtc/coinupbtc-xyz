@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<!--
+  Fee-band router — how a fee rate decides which block takes your transaction.
+  Self-contained: no backend, no framework, no build step, no tracking.
+  The mempool here is simulated, not live.
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fee-band router — the lab</title>
+  <meta name="description" content="A simulated mempool: transactions arrive, sort into fee bands, and race for space in the next few blocks. Set your own fee rate and see which block takes you.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0e13">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c; --ink-3: #191d26;
+      --paper: #ece8df; --acid: #c8f54a; --hot: #ff6b5e;
+      --mute: #8b9287; --dim: #5f6660;
+      --line: rgba(236,232,223,.14); --line-soft: rgba(236,232,223,.07);
+      --font-display: Fraunces, Georgia, serif;
+      --font-body: "IBM Plex Mono", ui-monospace, monospace;
+      --pad: clamp(1.15rem, 4vw, 3.5rem);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); background: var(--ink); color: var(--paper);
+      line-height: 1.55; min-height: 100svh; display: flex; flex-direction: column;
+    }
+    a { color: inherit; text-underline-offset: 4px; transition: color .18s ease; }
+    a:hover { color: var(--acid); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+
+    .top {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute);
+      padding: 1.4rem 0; border-bottom: 1px solid var(--line-soft);
+    }
+    .top a { text-decoration: none; }
+
+    header { padding-block: clamp(2.2rem, 6vw, 3.6rem) 1.6rem; }
+    .idx { font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+    h1 {
+      font-family: var(--font-display); font-weight: 700; letter-spacing: -.03em;
+      font-size: clamp(2rem, 6.5vw, 3.6rem); line-height: 1; margin-top: .5rem;
+    }
+    .lede { margin-top: 1.2rem; max-width: 68ch; color: #d6d3ca; font-size: .92rem; line-height: 1.75; }
+    .lede b { color: var(--paper); font-weight: 500; }
+
+    main { flex: 1; padding-bottom: clamp(3rem, 7vw, 5rem); }
+
+    .panel { border: 1px solid var(--line-soft); background: var(--ink-2); padding: clamp(1.1rem,3vw,1.7rem); margin-top: 1.6rem; }
+
+    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px,100%),1fr)); gap: 1.3rem 2rem; align-items: end; }
+    .ctl { display: flex; flex-direction: column; gap: .45rem; }
+    .ctl label { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+    .ctl .val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .ctl .val span { color: var(--acid); font-size: .6em; }
+    input[type=range] { width: 100%; accent-color: var(--acid); cursor: pointer; }
+    .btn {
+      font: inherit; font-size: .78rem; background: none; color: var(--paper);
+      border: 1px solid var(--line); padding: .55rem 1rem; cursor: pointer;
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+    .btn:hover { border-color: var(--acid); color: var(--acid); }
+
+    canvas { width: 100%; height: auto; display: block; background: var(--ink); border: 1px solid var(--line-soft); margin-top: 1.5rem; }
+
+    .verdict {
+      margin-top: 1.5rem; border: 1px solid var(--line-soft); background: var(--ink);
+      padding: 1.2rem 1.3rem; display: flex; flex-wrap: wrap; gap: 1rem 2rem; align-items: baseline;
+    }
+    .verdict .big {
+      font-family: var(--font-display); font-weight: 700; letter-spacing: -.02em;
+      font-size: clamp(1.3rem, 3.6vw, 1.9rem); line-height: 1.1;
+    }
+    .verdict .big.in { color: var(--acid); }
+    .verdict .big.out { color: var(--hot); }
+    .verdict p { font-size: .8rem; color: var(--mute); max-width: 46ch; line-height: 1.65; }
+
+    .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(190px,100%),1fr)); gap: 1px; background: var(--line-soft); margin-top: 1.5rem; border: 1px solid var(--line-soft); }
+    .res { background: var(--ink); padding: 1.1rem; }
+    .res dt { font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute); }
+    .res dd { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.35rem,3.6vw,1.9rem); line-height: 1.05; margin-top: .45rem; letter-spacing: -.02em; }
+    .res .unit { font-size: .5em; color: var(--mute); }
+
+    .story { margin-top: clamp(2.4rem,6vw,3.6rem); max-width: 72ch; }
+    .story h2 { font-family: var(--font-display); font-weight: 700; letter-spacing: -.02em; font-size: clamp(1.3rem,3.4vw,1.9rem); margin-bottom: .9rem; }
+    .story p { color: var(--mute); font-size: .87rem; line-height: 1.8; margin-bottom: 1rem; }
+    .story strong { color: var(--paper); font-weight: 500; }
+    .callout { border-left: 2px solid var(--acid); padding: .2rem 0 .2rem 1.1rem; margin: 1.4rem 0; color: #d6d3ca; font-size: .87rem; line-height: 1.8; }
+
+    footer { border-top: 1px solid var(--line-soft); padding: 1.7rem 0; font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap top">
+    <a href="../index.html">← the lab</a>
+    <span>coinupbtc.xyz</span>
+  </div>
+
+  <header class="wrap">
+    <p class="idx">Demo 01</p>
+    <h1>Fee-band router</h1>
+    <p class="lede">
+      A block has room for roughly <b>4 million weight units</b> and miners fill it with whatever
+      pays best per byte. So the mempool is not a queue — it is a <b>price ladder</b>. Your
+      transaction is not waiting its turn; it is waiting for everything that outbids it to clear.
+      Set a fee rate and watch which block takes you.
+    </p>
+  </header>
+
+  <main class="wrap">
+    <div class="panel">
+      <div class="controls">
+        <div class="ctl">
+          <label for="fee">Your fee rate</label>
+          <div class="val" id="feeVal">18<span> sat/vB</span></div>
+          <input type="range" id="fee" min="1" max="150" step="1" value="18">
+        </div>
+        <div class="ctl">
+          <label for="load">Network demand</label>
+          <div class="val" id="loadVal">Busy</div>
+          <input type="range" id="load" min="20" max="240" step="5" value="110">
+        </div>
+        <div class="ctl">
+          <label for="size">Your transaction size</label>
+          <div class="val" id="sizeVal">225<span> vB</span></div>
+          <input type="range" id="size" min="110" max="1200" step="5" value="225">
+        </div>
+        <div class="ctl" style="flex-direction:row; gap:.6rem; align-items:flex-end">
+          <button class="btn" id="pause">Pause</button>
+          <button class="btn" id="mine">Mine a block</button>
+        </div>
+      </div>
+
+      <canvas id="c" width="1160" height="470" role="img"
+              aria-label="Simulated mempool: transactions sorted into fee bands, filling the next blocks"></canvas>
+
+      <div class="verdict">
+        <span class="big" id="vBig">—</span>
+        <p id="vText">Adjust your fee rate to see where you land.</p>
+      </div>
+
+      <dl class="results">
+        <div class="res">
+          <dt>Next block cutoff</dt>
+          <dd id="rCut">—<span class="unit"> sat/vB</span></dd>
+        </div>
+        <div class="res">
+          <dt>Mempool depth</dt>
+          <dd id="rDepth">—<span class="unit"> MvB</span></dd>
+        </div>
+        <div class="res">
+          <dt>Your fee</dt>
+          <dd id="rFee">—<span class="unit"> sats</span></dd>
+        </div>
+        <div class="res">
+          <dt>Ahead of you</dt>
+          <dd id="rAhead">—<span class="unit">%</span></dd>
+        </div>
+      </dl>
+    </div>
+
+    <section class="story">
+      <h2>Why bands, not a queue</h2>
+      <p>
+        Miners are solving a knapsack problem with one dimension that matters: <strong>satoshis per
+        virtual byte</strong>. Total fee is irrelevant to whether you get in — a large transaction
+        paying a lot in absolute terms still loses to a small one paying more per byte. That is why
+        the paid amount and the fee <em>rate</em> are two different sliders above, and only one of
+        them changes your position.
+      </p>
+      <p>
+        Grouping the pending set into bands makes the ladder legible. Each band is a price tier;
+        the next block drains from the top down until it runs out of room. Whatever tier the block
+        stops in becomes the <strong>cutoff</strong> — the market-clearing price for the next ten
+        minutes. Everything below it waits for the next auction.
+      </p>
+      <div class="callout">
+        Raise <strong>network demand</strong> and hold your fee still. Nothing about your transaction
+        changed, but the cutoff climbs past you and your confirmation slides out. Fee estimation is
+        forecasting other people's behaviour, which is why every estimator is sometimes wrong.
+      </div>
+      <p>
+        <strong>This is a simulation, not a live feed.</strong> Arrivals are drawn from a heavy-tailed
+        distribution shaped to look like a real fee market, and blocks are mined on a fixed cadence
+        rather than a Poisson process. It is built to make the mechanism visible, not to price your
+        actual transaction.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><a href="../index.html">← the lab</a></span>
+      <span><a href="https://coinupbtc.com/">coinupbtc.com</a></span>
+      <span>Simulated — not a live mempool</span>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var canvas = document.getElementById("c");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+
+    var feeIn  = document.getElementById("fee");
+    var loadIn = document.getElementById("load");
+    var sizeIn = document.getElementById("size");
+    var pauseBtn = document.getElementById("pause");
+
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var paused = reduced;
+
+    /* Price ladder. Top band drains first. */
+    var BANDS = [
+      { lo: 100, hi: 400, label: "100+",   color: "#c8f54a" },
+      { lo: 40,  hi: 100, label: "40–100", color: "#a8e04a" },
+      { lo: 20,  hi: 40,  label: "20–40",  color: "#7fc98f" },
+      { lo: 10,  hi: 20,  label: "10–20",  color: "#63b6ff" },
+      { lo: 4,   hi: 10,  label: "4–10",   color: "#8b9287" },
+      { lo: 1,   hi: 4,   label: "1–4",    color: "#5f6660" }
+    ];
+
+    var BLOCK_VB = 1000000;      // ~1M vB of room per block
+    var NBLOCKS  = 4;
+
+    var pool = BANDS.map(function () { return 0; });   // vB pending per band
+    var flyers = [];
+    var blocks = [];
+    var lastMine = 0;
+    var t = 0;
+
+    function bandOf(rate) {
+      for (var i = 0; i < BANDS.length; i++) {
+        if (rate >= BANDS[i].lo && rate < BANDS[i].hi) return i;
+      }
+      return rate >= 400 ? 0 : BANDS.length - 1;
+    }
+
+    /* Heavy-tailed fee rates: most cheap, a thin expensive tail. */
+    function sampleRate() {
+      var u = Math.random();
+      var r = Math.exp(Math.log(1.2) + Math.pow(u, 2.6) * Math.log(260 / 1.2));
+      return Math.max(1, Math.min(399, r));
+    }
+
+    /* Seed a backlog several blocks deep, so the next block cannot drain the
+       whole pool and the cutoff lands at a real price rather than the floor. */
+    function seedPool() {
+      var demand = Number(loadIn.value);
+      var target = BLOCK_VB * 6 * (demand / 110);   // ~6 blocks deep at "Busy"
+      var placed = 0;
+      while (placed < target) {
+        var r = sampleRate();
+        var vb = 140 + Math.random() * 500;
+        pool[bandOf(r)] += vb;
+        placed += vb;
+      }
+    }
+
+    function totalPool() {
+      return pool.reduce(function (a, b) { return a + b; }, 0);
+    }
+
+    /* Fill the next N blocks from the top band down; return per-block plans. */
+    function plan() {
+      var left = pool.slice();
+      var out = [];
+      for (var b = 0; b < NBLOCKS; b++) {
+        var room = BLOCK_VB;
+        var fills = [];
+        var cutoff = null;
+        for (var i = 0; i < BANDS.length && room > 0; i++) {
+          if (left[i] <= 0) continue;
+          var take = Math.min(left[i], room);
+          fills.push({ band: i, vb: take });
+          left[i] -= take;
+          room -= take;
+          cutoff = BANDS[i].lo;
+          if (left[i] > 0) break;   // band did not fully clear — this sets the price
+        }
+        out.push({ fills: fills, cutoff: cutoff, used: BLOCK_VB - room });
+      }
+      return out;
+    }
+
+    /* Where does the user's transaction land? */
+    function locate(plans, rate, vb) {
+      var myBand = bandOf(rate);
+      // vB ahead of us: everything in strictly better bands, plus half our own
+      // band on average (we do not model position inside a band).
+      var ahead = 0;
+      for (var i = 0; i < myBand; i++) ahead += pool[i];
+      ahead += pool[myBand] * 0.5;
+
+      var cum = 0;
+      for (var b = 0; b < plans.length; b++) {
+        cum += BLOCK_VB;
+        if (ahead + vb <= cum) return { block: b + 1, ahead: ahead };
+      }
+      return { block: null, ahead: ahead };
+    }
+
+    function loadLabel(v) {
+      if (v < 45)  return "Quiet";
+      if (v < 90)  return "Normal";
+      if (v < 150) return "Busy";
+      if (v < 200) return "Congested";
+      return "Fee spike";
+    }
+
+    /* Arrivals are calibrated against block drain: at "Busy" (110) inflow
+       roughly equals one block per interval, so the pool holds steady and the
+       slider genuinely decides whether the backlog grows or clears. Each dot
+       carries a bundle of transactions — drawing them one per dot would put
+       tens of thousands of rects on screen for no extra information. */
+    var PER_TICK = 3;
+    function spawn() {
+      var demand = Number(loadIn.value);
+      var arrivalVB = demand * 190;          // vB entering per spawn tick
+      for (var i = 0; i < PER_TICK; i++) {
+        var r = sampleRate();
+        var bi = bandOf(r);
+        flyers.push({
+          x: -10 - Math.random() * 60,
+          y: laneY(bi) + (Math.random() - 0.5) * 14,
+          band: bi,
+          vb: arrivalVB / PER_TICK,
+          sp: 1.6 + Math.random() * 2.2
+        });
+      }
+      if (flyers.length > 400) flyers.splice(0, flyers.length - 400);
+    }
+
+    var padL = 92, padR = 300, padT = 26, padB = 34;
+    function laneH() { return (H - padT - padB) / BANDS.length; }
+    function laneY(i) { return padT + laneH() * (i + 0.5); }
+
+    function draw() {
+      var plans = plan();
+      var rate = Number(feeIn.value);
+      var vb = Number(sizeIn.value);
+      var me = locate(plans, rate, vb);
+      var myBand = bandOf(rate);
+
+      ctx.fillStyle = "#0c0e13";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.font = "12px 'IBM Plex Mono', monospace";
+      ctx.textBaseline = "middle";
+
+      // lanes
+      for (var i = 0; i < BANDS.length; i++) {
+        var y = laneY(i), lh = laneH();
+        if (i === myBand) {
+          ctx.fillStyle = "rgba(200,245,74,.05)";
+          ctx.fillRect(padL - 6, y - lh / 2, W - padL - padR + 12, lh);
+        }
+        ctx.strokeStyle = "rgba(236,232,223,.06)";
+        ctx.beginPath(); ctx.moveTo(padL, y + lh / 2); ctx.lineTo(W - padR, y + lh / 2); ctx.stroke();
+
+        ctx.fillStyle = i === myBand ? "#ece8df" : "#8b9287";
+        ctx.textAlign = "right";
+        ctx.fillText(BANDS[i].label, padL - 14, y);
+
+        // pending depth bar
+        var frac = Math.min(1, pool[i] / (BLOCK_VB * 2.2));
+        ctx.fillStyle = BANDS[i].color;
+        ctx.globalAlpha = i === myBand ? .5 : .22;
+        ctx.fillRect(padL, y - 5, (W - padL - padR) * frac, 10);
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#5f6660";
+      ctx.fillText("sat/vB", 14, padT - 8);
+
+      // flyers
+      for (var f = 0; f < flyers.length; f++) {
+        var p = flyers[f];
+        ctx.fillStyle = BANDS[p.band].color;
+        ctx.globalAlpha = .85;
+        ctx.fillRect(p.x, p.y - 1.5, 5, 3);
+        ctx.globalAlpha = 1;
+      }
+
+      // blocks
+      var bx = W - padR + 24;
+      var bw = 58, gap = 8;
+      for (var b = 0; b < NBLOCKS; b++) {
+        var x = bx + b * (bw + gap);
+        var top = padT + 16, hgt = H - padT - padB - 34;
+
+        ctx.strokeStyle = me.block === b + 1 ? "rgba(200,245,74,.75)" : "rgba(236,232,223,.14)";
+        ctx.lineWidth = me.block === b + 1 ? 2 : 1;
+        ctx.strokeRect(x, top, bw, hgt);
+
+        var yFill = top + hgt;
+        for (var k = 0; k < plans[b].fills.length; k++) {
+          var fl = plans[b].fills[k];
+          var fh = (fl.vb / BLOCK_VB) * hgt;
+          ctx.fillStyle = BANDS[fl.band].color;
+          ctx.globalAlpha = .55;
+          ctx.fillRect(x + 1, yFill - fh, bw - 2, fh);
+          ctx.globalAlpha = 1;
+          yFill -= fh;
+        }
+
+        ctx.fillStyle = me.block === b + 1 ? "#c8f54a" : "#8b9287";
+        ctx.textAlign = "center";
+        ctx.fillText("+" + (b + 1), x + bw / 2, top - 8);
+        ctx.fillStyle = "#5f6660";
+        ctx.font = "10px 'IBM Plex Mono', monospace";
+        ctx.fillText(plans[b].cutoff !== null ? "≥" + plans[b].cutoff : "—", x + bw / 2, top + hgt + 14);
+        ctx.font = "12px 'IBM Plex Mono', monospace";
+      }
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#5f6660";
+      ctx.fillText("next blocks", bx, H - padB + 12);
+
+      // readouts
+      var cut = plans[0].cutoff;
+      document.getElementById("rCut").innerHTML =
+        (cut !== null ? cut : "—") + '<span class="unit"> sat/vB</span>';
+      document.getElementById("rDepth").innerHTML =
+        (totalPool() / 1e6).toFixed(2) + '<span class="unit"> MvB</span>';
+      document.getElementById("rFee").innerHTML =
+        (rate * vb).toLocaleString() + '<span class="unit"> sats</span>';
+      document.getElementById("rAhead").innerHTML =
+        ((me.ahead / Math.max(1, totalPool())) * 100).toFixed(0) + '<span class="unit">%</span>';
+
+      var big = document.getElementById("vBig"), txt = document.getElementById("vText");
+      if (me.block === 1) {
+        big.textContent = "Block +1";
+        big.className = "big in";
+        txt.textContent = "At " + rate + " sat/vB you clear the next block's cutoff of "
+          + cut + ", so you go in the very next block — about 10 minutes at a normal cadence.";
+      } else if (me.block) {
+        big.textContent = "Block +" + me.block;
+        big.className = "big in";
+        txt.textContent = "At " + rate + " sat/vB you are under the next block's cutoff of "
+          + cut + ", so you wait for " + (me.block - 1) + " more block"
+          + (me.block === 2 ? "" : "s") + " of better-paying transactions to clear — about "
+          + (me.block * 10) + " minutes at a normal cadence.";
+      } else {
+        big.textContent = "Still waiting";
+        big.className = "big out";
+        txt.textContent = "At " + rate + " sat/vB you are below the cutoff for all "
+          + NBLOCKS + " blocks shown. You confirm when demand drops or you replace the "
+          + "transaction with a higher fee.";
+      }
+    }
+
+    function step(ts) {
+      if (!paused) {
+        t++;
+        if (t % 4 === 0) spawn();
+
+        for (var i = flyers.length - 1; i >= 0; i--) {
+          var p = flyers[i];
+          p.x += p.sp;
+          if (p.x > W - padR - 6) {
+            pool[p.band] += p.vb;
+            flyers.splice(i, 1);
+          }
+        }
+
+        if (ts - lastMine > 4200) { mine(); lastMine = ts; }
+      }
+      draw();
+      requestAnimationFrame(step);
+    }
+
+    function mine() {
+      var room = BLOCK_VB;
+      for (var i = 0; i < BANDS.length && room > 0; i++) {
+        var take = Math.min(pool[i], room);
+        pool[i] -= take;
+        room -= take;
+      }
+    }
+
+    function syncLabels() {
+      document.getElementById("feeVal").innerHTML  = feeIn.value + '<span> sat/vB</span>';
+      document.getElementById("sizeVal").innerHTML = sizeIn.value + '<span> vB</span>';
+      document.getElementById("loadVal").textContent = loadLabel(Number(loadIn.value));
+    }
+
+    [feeIn, sizeIn, loadIn].forEach(function (el) {
+      el.addEventListener("input", function () { syncLabels(); draw(); });
+    });
+
+    loadIn.addEventListener("change", function () {
+      // Re-seed so the depth reflects the new demand immediately.
+      pool = BANDS.map(function () { return 0; });
+      seedPool();
+    });
+
+    pauseBtn.addEventListener("click", function () {
+      paused = !paused;
+      pauseBtn.textContent = paused ? "Resume" : "Pause";
+    });
+    document.getElementById("mine").addEventListener("click", function () { mine(); draw(); });
+
+    syncLabels();
+    seedPool();
+    if (paused) pauseBtn.textContent = "Resume";
+    requestAnimationFrame(step);
+  })();
+  </script>
+</body>
+</html>

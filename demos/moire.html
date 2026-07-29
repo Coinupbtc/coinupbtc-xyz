@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<!--
+  Moiré bench — interference from two grids that almost agree.
+  Self-contained: no backend, no framework, no build step, no tracking.
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Moiré bench — the lab</title>
+  <meta name="description" content="Two grids, slightly disagreeing. Rotate and detune them to raise interference patterns out of nothing, including the motif used across coinupbtc.com.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0e13">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c;
+      --paper: #ece8df; --acid: #c8f54a;
+      --mute: #8b9287; --dim: #5f6660;
+      --line: rgba(236,232,223,.14); --line-soft: rgba(236,232,223,.07);
+      --font-display: Fraunces, Georgia, serif;
+      --font-body: "IBM Plex Mono", ui-monospace, monospace;
+      --pad: clamp(1.15rem, 4vw, 3.5rem);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); background: var(--ink); color: var(--paper);
+      line-height: 1.55; min-height: 100svh; display: flex; flex-direction: column;
+    }
+    a { color: inherit; text-underline-offset: 4px; transition: color .18s ease; }
+    a:hover { color: var(--acid); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+
+    .top {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute);
+      padding: 1.4rem 0; border-bottom: 1px solid var(--line-soft);
+    }
+    .top a { text-decoration: none; }
+
+    header { padding-block: clamp(2.2rem,6vw,3.6rem) 1.6rem; }
+    .idx { font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+    h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: -.03em; font-size: clamp(2rem,6.5vw,3.6rem); line-height: 1; margin-top: .5rem; }
+    .lede { margin-top: 1.2rem; max-width: 68ch; color: #d6d3ca; font-size: .92rem; line-height: 1.75; }
+    .lede b { color: var(--paper); font-weight: 500; }
+
+    main { flex: 1; padding-bottom: clamp(3rem,7vw,5rem); }
+    .panel { border: 1px solid var(--line-soft); background: var(--ink-2); padding: clamp(1.1rem,3vw,1.7rem); margin-top: 1.6rem; }
+
+    canvas { width: 100%; height: auto; display: block; background: #000; border: 1px solid var(--line-soft); }
+
+    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(215px,100%),1fr)); gap: 1.3rem 2rem; margin-top: 1.5rem; }
+    .ctl { display: flex; flex-direction: column; gap: .45rem; }
+    .ctl label { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+    .ctl .val { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; line-height: 1; }
+    .ctl .val span { color: var(--acid); font-size: .6em; }
+    input[type=range] { width: 100%; accent-color: var(--acid); cursor: pointer; }
+
+    .row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.4rem; align-items: center; }
+    .btn {
+      font: inherit; font-size: .74rem; background: none; color: var(--paper);
+      border: 1px solid var(--line); padding: .5rem .85rem; cursor: pointer;
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+    .btn:hover { border-color: var(--acid); color: var(--acid); }
+    .btn.on { background: var(--acid); color: var(--ink); border-color: var(--acid); }
+    .row .sep { flex: 1; }
+
+    .beat {
+      margin-top: 1.3rem; border: 1px solid var(--line-soft); background: var(--ink);
+      padding: 1.1rem 1.2rem; font-size: .84rem; color: var(--mute); line-height: 1.7;
+    }
+    .beat b { font-family: var(--font-display); font-size: 1.5rem; color: var(--acid); font-weight: 700; letter-spacing: -.02em; }
+
+    .story { margin-top: clamp(2.4rem,6vw,3.6rem); max-width: 72ch; }
+    .story h2 { font-family: var(--font-display); font-weight: 700; letter-spacing: -.02em; font-size: clamp(1.3rem,3.4vw,1.9rem); margin-bottom: .9rem; }
+    .story p { color: var(--mute); font-size: .87rem; line-height: 1.8; margin-bottom: 1rem; }
+    .story strong { color: var(--paper); font-weight: 500; }
+    .story code { background: var(--ink-2); border: 1px solid var(--line-soft); padding: .12rem .4rem; font-size: .85em; color: var(--acid); }
+    .callout { border-left: 2px solid var(--acid); padding: .2rem 0 .2rem 1.1rem; margin: 1.4rem 0; color: #d6d3ca; font-size: .87rem; line-height: 1.8; }
+
+    footer { border-top: 1px solid var(--line-soft); padding: 1.7rem 0; font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap top">
+    <a href="../index.html">← the lab</a>
+    <span>coinupbtc.xyz</span>
+  </div>
+
+  <header class="wrap">
+    <p class="idx">Demo 04</p>
+    <h1>Moiré bench</h1>
+    <p class="lede">
+      Lay two regular patterns over each other and detune one very slightly. The result is a
+      third pattern that <b>is not in either layer</b> — it is made entirely of the disagreement
+      between them, and it is far coarser than anything drawn. This is the motif behind the
+      header on both of my sites; here you can take it apart.
+    </p>
+  </header>
+
+  <main class="wrap">
+    <div class="panel">
+      <canvas id="c" width="1160" height="620" role="img"
+              aria-label="Interference pattern generated by two overlaid grids"></canvas>
+
+      <div class="controls">
+        <div class="ctl">
+          <label for="s1">Layer A spacing</label>
+          <div class="val" id="s1Val">10.0<span> px</span></div>
+          <input type="range" id="s1" min="30" max="260" step="1" value="100">
+        </div>
+        <div class="ctl">
+          <label for="s2">Layer B spacing</label>
+          <div class="val" id="s2Val">10.6<span> px</span></div>
+          <input type="range" id="s2" min="30" max="260" step="1" value="106">
+        </div>
+        <div class="ctl">
+          <label for="rot">Layer B rotation</label>
+          <div class="val" id="rotVal">0.0<span>°</span></div>
+          <input type="range" id="rot" min="0" max="900" step="1" value="0">
+        </div>
+        <div class="ctl">
+          <label for="off">Layer B offset</label>
+          <div class="val" id="offVal">0<span> px</span></div>
+          <input type="range" id="off" min="0" max="200" step="1" value="0">
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn on" id="mRings">Rings</button>
+        <button class="btn" id="mLines">Lines</button>
+        <button class="btn" id="mGrid">Grid</button>
+        <span class="sep"></span>
+        <button class="btn" id="spin">Animate</button>
+        <button class="btn" id="preset">Site motif</button>
+      </div>
+
+      <div class="beat" id="beat">—</div>
+    </div>
+
+    <section class="story">
+      <h2>Where the third pattern comes from</h2>
+      <p>
+        Two line gratings with spacings <code>a</code> and <code>b</code> come back into alignment
+        every <code>a·b / |a − b|</code> pixels. That distance is the <strong>beat period</strong>,
+        and it is what you actually see. Make the two spacings nearly equal and the denominator
+        goes to zero: a 0.6-pixel disagreement between 10.0 and 10.6 produces bands about
+        <strong>177 pixels</strong> apart — roughly eighteen times coarser than either grid.
+      </p>
+      <p>
+        That amplification is why moiré shows up as a <em>defect</em> everywhere. A striped shirt on
+        camera, a screenshot of a screen, a halftone print scanned at the wrong resolution: in each
+        case a fine pattern is being sampled by another fine pattern, and the error between them is
+        big enough to see. Rotation does the same thing to a grid — the beat spacing scales as
+        roughly <code>a / (2·sin(θ/2))</code>, so a one-degree tilt produces enormous bands.
+      </p>
+      <div class="callout">
+        Set both spacings equal and the pattern vanishes into flat grey — perfect agreement carries
+        no information. Then nudge one slider by a single step. Everything you see is the size of
+        that error, magnified.
+      </div>
+      <p>
+        <strong>Site motif</strong> restores the exact parameters used in the page headers: two
+        concentric ring sets at 10.0 and 10.6 pixels, sharing an origin. The version on the live
+        pages is pure CSS — two <code>repeating-radial-gradient</code> layers, no image and no
+        JavaScript — which is why it costs nothing to ship.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><a href="../index.html">← the lab</a></span>
+      <span><a href="https://coinupbtc.com/">coinupbtc.com</a></span>
+      <span>Runs entirely in your browser</span>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var canvas = document.getElementById("c");
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height;
+
+    var s1 = document.getElementById("s1"), s2 = document.getElementById("s2");
+    var rot = document.getElementById("rot"), off = document.getElementById("off");
+    var beat = document.getElementById("beat");
+
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var mode = "rings";
+    var spinning = false;
+    var phase = 0;
+
+    var img = ctx.createImageData(W, H);
+    var buf = img.data;
+
+    function val(el, d) { return Number(el.value) / d; }
+
+    /* Each layer returns 0..1 coverage at a point; the two are multiplied so
+       the visible pattern is literally the product of the disagreement. */
+    function layer(x, y, spacing, mode) {
+      if (mode === "rings") {
+        var r = Math.sqrt(x * x + y * y);
+        return 0.5 + 0.5 * Math.cos((r / spacing) * Math.PI * 2);
+      }
+      if (mode === "lines") {
+        return 0.5 + 0.5 * Math.cos((x / spacing) * Math.PI * 2);
+      }
+      // grid
+      var a = 0.5 + 0.5 * Math.cos((x / spacing) * Math.PI * 2);
+      var b = 0.5 + 0.5 * Math.cos((y / spacing) * Math.PI * 2);
+      return a * b;
+    }
+
+    function render() {
+      var sp1 = val(s1, 10), sp2 = val(s2, 10);
+      var th = (val(rot, 10) * Math.PI) / 180 + (spinning ? phase : 0);
+      var ox = val(off, 1);
+
+      var cx = W * 0.5, cy = H * 0.5;
+      var cos = Math.cos(th), sin = Math.sin(th);
+
+      var i = 0;
+      for (var y = 0; y < H; y++) {
+        var dy = y - cy;
+        for (var x = 0; x < W; x++) {
+          var dx = x - cx;
+
+          var A = layer(dx, dy, sp1, mode);
+
+          // layer B: rotated and offset
+          var rx = (dx - ox) * cos - dy * sin;
+          var ry = (dx - ox) * sin + dy * cos;
+          var B = layer(rx, ry, sp2, mode);
+
+          var v = A * B;
+          v = v * v;                       // tighten the fringes
+          var c = (v * 255) | 0;
+
+          buf[i++] = (c * 200 / 255) | 0;  // tint toward the acid green
+          buf[i++] = (c * 245 / 255) | 0;
+          buf[i++] = (c * 74  / 255) | 0;
+          buf[i++] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+
+      // labels
+      document.getElementById("s1Val").innerHTML  = sp1.toFixed(1) + '<span> px</span>';
+      document.getElementById("s2Val").innerHTML  = sp2.toFixed(1) + '<span> px</span>';
+      document.getElementById("rotVal").innerHTML = val(rot, 10).toFixed(1) + '<span>°</span>';
+      document.getElementById("offVal").innerHTML = ox.toFixed(0) + '<span> px</span>';
+
+      var d = Math.abs(sp1 - sp2);
+      var period = d < 0.001 ? Infinity : (sp1 * sp2) / d;
+      var ratio = period / Math.min(sp1, sp2);
+
+      if (!isFinite(period)) {
+        beat.innerHTML = "<b>∞</b> — the layers agree exactly, so there is no beat. " +
+                         "Nudge one spacing by a single step.";
+      } else {
+        beat.innerHTML = "Beat period <b>" + period.toFixed(0) + " px</b> — about " +
+                         ratio.toFixed(0) + "× coarser than either grid. " +
+                         "A " + d.toFixed(1) + " px disagreement, magnified into bands you can see " +
+                         "across the room.";
+      }
+    }
+
+    function loop() {
+      if (spinning) { phase += 0.0025; render(); }
+      requestAnimationFrame(loop);
+    }
+
+    [s1, s2, rot, off].forEach(function (el) {
+      el.addEventListener("input", render);
+    });
+
+    function setMode(m, btn) {
+      mode = m;
+      ["mRings", "mLines", "mGrid"].forEach(function (id) {
+        document.getElementById(id).classList.remove("on");
+      });
+      btn.classList.add("on");
+      render();
+    }
+    document.getElementById("mRings").addEventListener("click", function () { setMode("rings", this); });
+    document.getElementById("mLines").addEventListener("click", function () { setMode("lines", this); });
+    document.getElementById("mGrid").addEventListener("click", function () { setMode("grid", this); });
+
+    var spinBtn = document.getElementById("spin");
+    spinBtn.addEventListener("click", function () {
+      spinning = !spinning;
+      spinBtn.classList.toggle("on", spinning);
+      spinBtn.textContent = spinning ? "Stop" : "Animate";
+      if (!spinning) phase = 0;
+      render();
+    });
+
+    document.getElementById("preset").addEventListener("click", function () {
+      s1.value = 100; s2.value = 106; rot.value = 0; off.value = 0;
+      setMode("rings", document.getElementById("mRings"));
+    });
+
+    render();
+    if (!reduced) loop();
+  })();
+  </script>
+</body>
+</html>
