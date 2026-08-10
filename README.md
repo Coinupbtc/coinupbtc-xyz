@@ -1,5 +1,21 @@
 # coinupbtc.xyz
 
+## At a glance
+
+| | |
+|---|---|
+| **What it is** | Holding page for the coinupbtc.xyz workshop domain. |
+| **What it’s for** | A simple public landing while the main site lives at coinupbtc.com. |
+| **How to use it** | ./setup.sh or open index.html. |
+
+## Try it
+
+### One command
+```bash
+git clone https://github.com/Coinupbtc/coinupbtc-xyz.git
+cd coinupbtc-xyz && ./setup.sh
+```
+
 | | |
 |---|---|
 | **What it is** | The holding page for `coinupbtc.xyz`, a workshop domain. |
