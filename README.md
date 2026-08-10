@@ -35,8 +35,8 @@ Drop the `<meta name="robots" content="noindex">` when you want it indexed.
 
 ## Contact policy
 
-Pseudonymous: no real name, employer, school, phone, or street address.
-Inbound: [GitHub](https://github.com/Coinupbtc) · [X @coinupbtc](https://x.com/coinupbtc) · [coinupbtc@gmail.com](mailto:coinupbtc@gmail.com).
+Do **not** add a personal email, real name, employer, school, phone, or street address.
+Inbound: [GitHub](https://github.com/Coinupbtc) · [X @coinupbtc](https://x.com/coinupbtc).
 
 ## Stack
 
