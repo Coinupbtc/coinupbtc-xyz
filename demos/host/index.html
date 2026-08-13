@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<!--
+  Host — official frohawk gorilla. 4-dir sprite pack + character-select lighting.
+  Snap frames, never morph. No backend, no LLM, no tracking.
+-->
+<head>
+  <meta charset="utf-8">
+  <script>
+    /* Path mounts: /holo (phone preview) and /demos/host (this site). Trailing slash required. */
+    (function () {
+      try {
+        var path = location.pathname || "/";
+        var mounts = ["/holo", "/demos/host"];
+        var i, m, b;
+        for (i = 0; i < mounts.length; i++) {
+          m = mounts[i];
+          if (path === m) {
+            location.replace(m + "/" + (location.search || "") + (location.hash || ""));
+            return;
+          }
+          if (path.indexOf(m + "/") === 0) {
+            b = document.createElement("base");
+            b.href = m + "/";
+            document.head.insertBefore(b, document.head.firstChild);
+            return;
+          }
+        }
+      } catch (e) { /* never block boot */ }
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Host — gorilla</title>
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0e13">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c;
+      --paper: #ece8df; --acid: #c8f54a;
+      --mute: #8b9287; --dim: #5f6660;
+      --line: rgba(236,232,223,.14); --line-soft: rgba(236,232,223,.07);
+      --font-display: Fraunces, Georgia, serif;
+      --font-body: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100%; min-height: 100dvh;
+      background: var(--ink); color: var(--paper);
+      font-family: var(--font-body);
+      -webkit-text-size-adjust: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      display: flex; flex-direction: column;
+      padding:
+        max(0.55rem, env(safe-area-inset-top, 0px))
+        max(0.85rem, env(safe-area-inset-right, 0px))
+        max(0.7rem, env(safe-area-inset-bottom, 0px))
+        max(0.85rem, env(safe-area-inset-left, 0px));
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100dvh;
+    }
+    .proto {
+      font-size: .62rem; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--dim); margin-bottom: .35rem;
+    }
+    h1 {
+      font-family: var(--font-display); font-size: 1.28rem; font-weight: 700;
+      letter-spacing: -.03em; line-height: 1.1; margin: 0 0 .2rem;
+    }
+    .blurb { color: var(--mute); font-size: .72rem; line-height: 1.4; margin-bottom: .4rem; }
+
+    .skins {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .35rem;
+      margin-bottom: .4rem;
+    }
+    .skins button {
+      min-height: 44px; font: inherit; font-size: .68rem;
+      letter-spacing: .08em; text-transform: uppercase;
+      background: none; color: var(--mute);
+      border: 1px solid var(--line); cursor: pointer;
+    }
+    .skins button[aria-selected="true"] {
+      background: var(--acid); color: var(--ink); border-color: var(--acid);
+    }
+
+    .stage {
+      position: relative; flex: 1; min-height: 220px;
+      border: 1px solid var(--line-soft); background: #000;
+      overflow: hidden;
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+    .pedestal {
+      pointer-events: none; position: absolute; left: 10%; right: 10%; bottom: 4%;
+      height: 18%;
+      background: radial-gradient(ellipse at 50% 40%, rgba(80,160,255,.35), rgba(212,168,64,.18) 42%, transparent 70%);
+      filter: blur(3px);
+    }
+
+    .line {
+      min-height: 2.2em;
+      border-left: 2px solid var(--acid);
+      padding: .08rem 0 .08rem .75rem;
+      margin: .4rem 0 .35rem;
+      font-family: var(--font-display); font-size: .95rem; font-weight: 500;
+      letter-spacing: -.02em; line-height: 1.25;
+    }
+    .line.err { border-color: #c45; color: #e8b4b4; }
+
+    .chips {
+      display: flex; flex-wrap: wrap; gap: .3rem;
+      margin-bottom: .4rem;
+    }
+    .chips button {
+      min-height: 44px; min-width: 44px;
+      padding: 0 .55rem; font: inherit; font-size: .72rem;
+      background: none; color: var(--paper);
+      border: 1px solid var(--line); cursor: pointer;
+    }
+    .chips button[aria-pressed="true"] {
+      background: var(--acid); color: var(--ink); border-color: var(--acid);
+    }
+
+    form.cmd {
+      display: flex; gap: .4rem; align-items: stretch;
+    }
+    form.cmd input {
+      flex: 1; min-height: 44px; min-width: 0;
+      font: inherit; font-size: 16px;
+      background: var(--ink-2); color: var(--paper);
+      border: 1px solid var(--line); padding: 0 .75rem;
+    }
+    form.cmd button {
+      min-height: 44px; min-width: 44px;
+      padding: 0 .9rem; font: inherit; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase;
+      background: var(--acid); color: var(--ink); border: 0; cursor: pointer;
+    }
+
+    @media (min-width: 720px) {
+      body { max-width: 520px; padding-top: 1.2rem; }
+      h1 { font-size: 1.7rem; }
+      .stage { min-height: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <p class="proto"><a href="https://coinupbtc.xyz/" style="color:inherit">the lab</a> · 04 · Host</p>
+  <h1>Host</h1>
+  <p class="blurb">Locked look. 4-dir sprites. Try <b style="color:var(--acid);font-weight:500">/twirl</b> /walk /roar.</p>
+
+  <div class="skins" role="tablist" aria-label="Paint">
+    <button type="button" role="tab" data-skin="color" aria-selected="true">Color</button>
+    <button type="button" role="tab" data-skin="punch" aria-selected="false">Punch</button>
+    <button type="button" role="tab" data-skin="dusk" aria-selected="false">Dusk</button>
+  </div>
+
+  <div class="stage" id="stage" aria-label="Host">
+    <canvas id="holo" width="390" height="420"></canvas>
+    <div class="pedestal" aria-hidden="true"></div>
+  </div>
+
+  <p class="line" id="line" aria-live="polite">Loading Host…</p>
+
+  <div class="chips" id="chips" aria-label="Emotes"></div>
+  <form class="cmd" id="form" action="#">
+    <input id="input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+           placeholder="/roar" aria-label="Slash command" inputmode="text">
+    <button type="submit">Go</button>
+  </form>
+
+  <script>
+    (function () {
+      /* Official 4-dir pack. Snap frames — never blend other faces. */
+      var SPRITE_VER = "12";
+      var DIRS = ["down", "left", "up", "right"];
+      var CLIP_N = { idle: 1, walk: 2, roar: 1, talk: 1, dance: 1, flex: 1 };
+      var CLIP_FOR = {
+        idle: "idle", walk: "walk", twirl: "idle", spin: "idle",
+        talk: "talk", say: "talk", roar: "roar", war: "roar",
+        dance: "dance", cheer: "dance", flex: "flex"
+      };
+      var CHIPS = ["/twirl", "/walk", "/talk", "/roar", "/dance", "/flex", "/cook", "/vibe", "/skate", "/idle"];
+      var CHIP_FOR = { skateboard: "/skate", laugh: "/lol", war: "/roar", cheer: "/dance", spin: "/twirl" };
+      var EMOTES = {
+        idle:  { loop: true,  line: "holds the floor." },
+        walk:  { loop: true,  line: "walks." },
+        twirl: { loop: true,  line: "turns. 4-dir." },
+        spin:  { loop: true,  line: "turns. 4-dir.", alias: "twirl" },
+        talk:  { loop: true,  line: "talks." },
+        say:   { loop: true,  line: "talks.", alias: "talk" },
+        dance: { loop: true,  line: "dances." },
+        lol:   { loop: true,  line: "laughs." },
+        laugh: { loop: true,  line: "laughs.", alias: "lol" },
+        cry:   { loop: true,  line: "cries." },
+        wave:  { loop: false, line: "waves." },
+        bow:   { loop: false, line: "bows." },
+        cheer: { loop: true,  line: "cheers.", alias: "dance" },
+        shrug: { loop: false, line: "shrugs. Who knows." },
+        flex:  { loop: true,  line: "beats his chest." },
+        point: { loop: false, line: "points." },
+        sit:   { loop: true,  line: "sits." },
+        sleep: { loop: true,  line: "sleeps." },
+        cook:  { loop: true,  line: "cooks." },
+        code:  { loop: true,  line: "writes code." },
+        coding:{ loop: true,  line: "writes code.", alias: "code" },
+        game:  { loop: true,  line: "plays." },
+        gaming:{ loop: true,  line: "plays.", alias: "game" },
+        vibe:  { loop: true,  line: "vibes." },
+        vibing:{ loop: true,  line: "vibes.", alias: "vibe" },
+        skateboard: { loop: true, line: "skates." },
+        skate: { loop: true,  line: "skates.", alias: "skateboard" },
+        coffee:{ loop: true,  line: "sips coffee." },
+        tea:   { loop: true,  line: "sips coffee.", alias: "coffee" },
+        roar:  { loop: true,  line: "roars." },
+        war:   { loop: true,  line: "roars.", alias: "roar" }
+      };
+      var HELP = "/twirl /walk /talk /roar /dance /flex /cook /code /game /vibe /skate /coffee /lol /idle";
+      var PAINT = {
+        color: "none",
+        punch: "saturate(1.45) contrast(1.12)",
+        dusk:  "saturate(0.85) brightness(0.92) hue-rotate(-12deg)"
+      };
+
+      var emote = "idle";
+      var emoteStart = 0;
+      var facing = "down";
+      var skin = "color";
+      var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var canvas = document.getElementById("holo");
+      var ctx = canvas.getContext("2d");
+      var stage = document.getElementById("stage");
+      var lineEl = document.getElementById("line");
+      var input = document.getElementById("input");
+      var chipsEl = document.getElementById("chips");
+      var cache = {};
+
+      function clipOf(name) {
+        return CLIP_FOR[name] || "idle";
+      }
+
+      function frameKey(dir, clip, i) {
+        return dir + "/" + clip + "/" + i;
+      }
+
+      function readyImg(dir, clip, i) {
+        var img = cache[frameKey(dir, clip, i)];
+        if (img && img.complete && img.naturalWidth) return img;
+        return null;
+      }
+
+      function loadPack(done) {
+        var left = 0;
+        DIRS.forEach(function (dir) {
+          Object.keys(CLIP_N).forEach(function (clip) {
+            var n = CLIP_N[clip];
+            var i;
+            for (i = 0; i < n; i++) {
+              left += 1;
+              (function (dir, clip, i) {
+                var img = new Image();
+                img.onload = img.onerror = function () {
+                  left -= 1;
+                  if (left <= 0 && done) done();
+                };
+                img.src = "sprites/web/pack/" + dir + "/" + clip + "/" + i + ".webp?v=" + SPRITE_VER;
+                cache[frameKey(dir, clip, i)] = img;
+              })(dir, clip, i);
+            }
+          });
+        });
+        if (left <= 0 && done) done();
+      }
+
+      function pickSprite(name, sec) {
+        var clip = clipOf(name);
+        var dir = facing;
+        var n = CLIP_N[clip] || 1;
+        var fps, idx;
+        if (name === "twirl" || name === "spin") {
+          dir = reduced ? "down" : DIRS[Math.floor(sec * 6) % 4];
+          facing = dir;
+          clip = "idle";
+          n = 1;
+        }
+        fps = (clip === "walk" && n > 1) ? 8 : 0;
+        idx = (fps && !reduced) ? Math.floor(sec * fps) % n : 0;
+        return readyImg(dir, clip, idx) || readyImg("down", "idle", 0);
+      }
+
+      /* Keep the 3/4 model. Light orbits like a character-select studio — never flatten into a card. */
+      function motion(name, sec) {
+        var m = { x: 0, y: 0, rot: 0, sx: 1, sy: 1, shake: 0, light: sec * 0.8 };
+        var step, breathe;
+        if (reduced) return m;
+        if (name === "idle") {
+          breathe = Math.sin(sec * 2.2);
+          m.y = breathe * 5;
+          m.sy = 1 + breathe * 0.012;
+        } else if (name === "walk") {
+          step = sec * 8;
+          m.y = Math.abs(Math.sin(step)) * 14;
+          m.rot = Math.sin(step) * 4;
+          m.light = sec * 2.4;
+        } else if (name === "twirl" || name === "spin") {
+          m.light = sec * 4.5;
+          m.rot = Math.sin(sec * 1.6) * 4;
+          m.y = Math.sin(sec * 5) * 3;
+        } else if (name === "talk" || name === "say") {
+          m.y = Math.sin(sec * 5) * 3;
+          m.sy = 1 + Math.sin(sec * 10) * 0.02;
+          m.light = sec * 1.6;
+        } else if (name === "dance" || name === "cheer") {
+          m.y = Math.abs(Math.sin(sec * 7)) * 16;
+          m.rot = Math.sin(sec * 7) * 10;
+          m.light = sec * 3.2;
+        } else if (name === "roar" || name === "war") {
+          m.shake = Math.sin(sec * 48) * 4;
+          m.sy = 1.04;
+          m.light = sec * 6;
+        } else if (name === "flex") {
+          m.sx = 1.06;
+          m.sy = 0.98;
+          m.y = Math.sin(sec * 6) * 4;
+        } else if (name === "skate" || name === "skateboard") {
+          m.y = Math.abs(Math.sin(sec * 10)) * 8;
+          m.rot = -8 + Math.sin(sec * 5) * 6;
+          m.x = Math.sin(sec * 2) * 14;
+          m.light = sec * 2.8;
+        } else if (name === "vibe" || name === "vibing") {
+          m.rot = Math.sin(sec * 2.2) * 6;
+          m.y = Math.sin(sec * 2.2) * 6;
+        } else if (name === "cook") {
+          m.rot = Math.sin(sec * 8) * 5;
+          m.y = Math.abs(Math.sin(sec * 8)) * 6;
+        } else if (name === "code" || name === "coding" || name === "game" || name === "gaming") {
+          m.rot = 4;
+          m.y = Math.sin(sec * 3) * 4;
+        } else if (name === "coffee" || name === "tea") {
+          m.y = Math.sin(sec * 3.5) * 5;
+        } else if (name === "lol" || name === "laugh") {
+          m.y = Math.abs(Math.sin(sec * 12)) * 8;
+          m.sy = 1 + Math.abs(Math.sin(sec * 12)) * 0.03;
+        } else {
+          m.y = Math.sin(sec * 2.2) * 5;
+        }
+        return m;
+      }
+
+      CHIPS.forEach(function (cmd) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = cmd;
+        b.setAttribute("aria-pressed", cmd === "/idle" ? "true" : "false");
+        b.addEventListener("click", function () { run(cmd); });
+        chipsEl.appendChild(b);
+      });
+
+      document.querySelectorAll(".skins button").forEach(function (b) {
+        b.addEventListener("click", function () {
+          skin = b.getAttribute("data-skin");
+          document.querySelectorAll(".skins button").forEach(function (x) {
+            x.setAttribute("aria-selected", x === b ? "true" : "false");
+          });
+        });
+      });
+
+      function markChip(name) {
+        var want = CHIP_FOR[name] || ("/" + name);
+        chipsEl.querySelectorAll("button").forEach(function (b) {
+          b.setAttribute("aria-pressed", b.textContent === want ? "true" : "false");
+        });
+      }
+
+      function run(raw) {
+        var s = String(raw || "").trim().toLowerCase();
+        if (!s) return;
+        if (s.charAt(0) !== "/") {
+          lineEl.className = "line err";
+          lineEl.textContent = "Commands start with /. Try /roar";
+          return;
+        }
+        var name = s.slice(1).split(/\s+/)[0];
+        var spec = EMOTES[name];
+        if (spec && spec.alias) { name = spec.alias; spec = EMOTES[name]; }
+        if (!spec) {
+          lineEl.className = "line err";
+          lineEl.textContent = "Unknown command. " + HELP;
+          return;
+        }
+        emote = name;
+        emoteStart = performance.now();
+        lineEl.className = "line";
+        lineEl.textContent = "Host " + spec.line;
+        markChip(name);
+      }
+
+      function finishShot() {
+        emote = "idle";
+        emoteStart = performance.now();
+        markChip("idle");
+      }
+
+      function drawSprite(w, h, now) {
+        var t = (now - emoteStart) / 1000;
+        var img = pickSprite(emote, t);
+        var fit, dw, dh, dx, dy, mot, cx, cy, lx, ly, g;
+        if (!img) return;
+        if (EMOTES[emote] && EMOTES[emote].loop === false && t > 1.6) finishShot();
+        mot = motion(emote, t);
+        fit = Math.min(w / img.width, (h * 0.92) / img.height) * 0.98;
+        dw = img.width * fit;
+        dh = img.height * fit;
+        dx = (w - dw) / 2;
+        dy = (h - dh) / 2;
+        cx = dx + dw / 2 + mot.x + mot.shake;
+        cy = dy + dh / 2 + mot.y;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(mot.rot * Math.PI / 180);
+        ctx.scale(mot.sx, mot.sy);
+        ctx.filter = PAINT[skin] || "none";
+        ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+        if (!reduced) {
+          lx = Math.cos(mot.light) * dw * 0.32;
+          ly = -dh * 0.18 + Math.sin(mot.light) * dh * 0.14;
+          ctx.filter = "none";
+          ctx.globalCompositeOperation = "source-atop";
+          g = ctx.createRadialGradient(lx, ly, 6, lx, ly, Math.max(dw, dh) * 0.85);
+          g.addColorStop(0, "rgba(255, 236, 196, 0.55)");
+          g.addColorStop(0.4, "rgba(140, 180, 255, 0.12)");
+          g.addColorStop(1, "rgba(8, 12, 32, 0.35)");
+          ctx.fillStyle = g;
+          ctx.fillRect(-dw / 2, -dh / 2, dw, dh);
+          ctx.globalCompositeOperation = "source-over";
+        }
+        ctx.restore();
+      }
+
+      function resize() {
+        var r = stage.getBoundingClientRect();
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.floor(r.width * dpr));
+        canvas.height = Math.max(1, Math.floor(r.height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        canvas.style.width = r.width + "px";
+        canvas.style.height = r.height + "px";
+      }
+
+      function frame(now) {
+        var w = stage.clientWidth;
+        var h = stage.clientHeight;
+        /* Leave pixels transparent so source-atop lighting hits Host only. Stage CSS is black. */
+        ctx.clearRect(0, 0, w, h);
+        drawSprite(w, h, now);
+        requestAnimationFrame(frame);
+      }
+
+      document.getElementById("form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        run(input.value);
+        input.value = "";
+        input.blur();
+      });
+      window.addEventListener("resize", resize);
+      resize();
+      loadPack(function () {
+        if (lineEl.textContent.indexOf("Loading") === 0) {
+          lineEl.textContent = "Host holds the floor.";
+        }
+      });
+      var qs = new URLSearchParams(location.search || "");
+      var bootSkin = qs.get("skin");
+      if (bootSkin && PAINT[bootSkin]) {
+        skin = bootSkin;
+        document.querySelectorAll(".skins button").forEach(function (x) {
+          x.setAttribute("aria-selected", x.getAttribute("data-skin") === skin ? "true" : "false");
+        });
+      }
+      var boot = (location.hash || "").replace(/^#\/?/, "");
+      if (boot && EMOTES[boot]) run("/" + boot);
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "Host",
+  "status": "official",
+  "locked": "2026-08-13",
+  "model": "krea2-turbo",
+  "seed": 14,
+  "sha256_source": "89a0bd44e72a4e8e08466528507a681941bbfb5f2bd3fb4336e388ed61b9078f",
+  "look": "frohawk gorilla, blue vest, red belt gold buckle, gold cuffs, yellow-orange eyes, brown fur, peach skin",
+  "anti": [
+    "necktie",
+    "Nintendo/Universal marks",
+    "hologram mesh",
+    "optical-flow morph"
+  ]
+}

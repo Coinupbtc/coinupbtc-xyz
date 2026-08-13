@@ -4,32 +4,32 @@
   coinupbtc.xyz — the lab.
   Pseudonymous: no real name, phone, employer, school, or street address.
 
-  Every demo under /demos/ is a single self-contained file: no backend, no
-  framework, no build step, no tracking. View source on any of them.
+  Demos 01–03 are one HTML file each. 04 Host is HTML + sprites.
+  No backend, no framework, no build step, no tracking.
 -->
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>The lab — coinupbtc.xyz</title>
-  <meta name="description" content="Three self-contained interactive demos from a local AI workshop: a mempool fee-band router, a multi-Spark 121 GB packer, and a moiré bench.">
+  <meta name="description" content="Lab demos you can poke in the browser: a mempool fee-band router, a 121 GB packer, a moiré bench, and Host the gorilla.">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0c0e13">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="The lab">
   <meta property="og:title" content="The lab — coinupbtc.xyz">
-  <meta property="og:description" content="Three things I measured on my own hardware, cut down until each fits in one file you can read.">
+  <meta property="og:description" content="Lab demos you can poke: fee-band router, 121 GB packer, moiré bench, and Host.">
   <meta property="og:url" content="https://coinupbtc.xyz/">
   <meta property="og:image" content="https://coinupbtc.xyz/assets/og-image.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="The lab — fee-band router, 121 GB packer, moiré bench. github.com/Coinupbtc · x.com/coinupbtc">
+  <meta property="og:image:alt" content="The lab — fee-band router, 121 GB packer, moiré bench, Host. github.com/Coinupbtc · x.com/coinupbtc">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@coinupbtc">
   <meta name="twitter:creator" content="@coinupbtc">
   <meta name="twitter:image" content="https://coinupbtc.xyz/assets/og-image.png">
-  <meta name="twitter:image:alt" content="The lab — fee-band router, 121 GB packer, moiré bench. github.com/Coinupbtc · x.com/coinupbtc">
+  <meta name="twitter:image:alt" content="The lab — fee-band router, 121 GB packer, moiré bench, Host. github.com/Coinupbtc · x.com/coinupbtc">
   <link rel="image_src" href="https://coinupbtc.xyz/assets/og-image.png">
 
   <link rel="canonical" href="https://coinupbtc.xyz/">
@@ -268,9 +268,9 @@
   <header class="hero wrap">
     <h1>The lab</h1>
     <p class="lede">
-      Three things I measured on my own hardware, cut down until each one fits in
-      <b>a single file you can read</b>. No backend, no account, no tracking — every demo
-      runs in your browser. The numbers on 02 are from this box, not a spec sheet.
+      Three mechanisms I measured on my own hardware, cut down until they fit in
+      <b>a file you can read</b> — plus Host, a slash-command gorilla.
+      No backend, no account, no tracking. The numbers on 02 are from this box, not a spec sheet.
     </p>
     <p class="use">
       <b>How to use it:</b> pick a card. Drag the sliders. Read the verdict.
@@ -282,7 +282,8 @@
     <p class="note" id="demos">
       These are not screenshots of tools. They are the actual mechanisms, reimplemented small:
       the fee-band routing behind a mempool visualiser, the 121&nbsp;GB-per-Spark memory budget
-      that decides what can sit at once, and the interference pattern used as the motif on both sites.
+      that decides what can sit at once, the interference pattern used as the motif on both sites,
+      and Host — an original gorilla you slash-command.
     </p>
 
     <ul class="grid">
@@ -320,6 +321,18 @@
           </span>
           <span class="do">Nudge <b>Layer B spacing</b> one notch. The bands you see are the disagreement.</span>
           <span class="tag"><span>canvas · site motif</span><span>Open →</span></span>
+        </a>
+      </li>
+
+      <li class="card">
+        <a href="demos/host/">
+          <span class="idx">04 · poke around</span>
+          <span class="name">Host</span>
+          <span class="what">
+            Original gorilla with a frohawk. 4-dir sprites, slash emotes, no backend.
+          </span>
+          <span class="do">Tap <b>/twirl</b>. Then /walk /roar. He does not morph.</span>
+          <span class="tag"><span>sprites · slash cmds</span><span>Open →</span></span>
         </a>
       </li>
     </ul>

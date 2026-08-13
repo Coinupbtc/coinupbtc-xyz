@@ -1,0 +1,64 @@
+{
+  "name": "Host",
+  "status": "official",
+  "identity": "official/identity/host-source.png",
+  "size": [
+    768,
+    1122
+  ],
+  "pivot": "center-bottom",
+  "fps": {
+    "idle": 4,
+    "walk": 8,
+    "roar": 6,
+    "talk": 6,
+    "dance": 8,
+    "flex": 6,
+    "twirl": 6
+  },
+  "dirs": [
+    "down",
+    "left",
+    "up",
+    "right"
+  ],
+  "notes": "down/right = locked 3/4. left/up = mirror (i2i would not orbit the camera). Snap frames, never morph.",
+  "clips": {
+    "idle": {
+      "down": 1,
+      "right": 1,
+      "left": 1,
+      "up": 1
+    },
+    "walk": {
+      "down": 2,
+      "right": 2,
+      "left": 2,
+      "up": 2
+    },
+    "roar": {
+      "down": 1,
+      "right": 1,
+      "left": 1,
+      "up": 1
+    },
+    "talk": {
+      "down": 1,
+      "right": 1,
+      "left": 1,
+      "up": 1
+    },
+    "dance": {
+      "down": 1,
+      "right": 1,
+      "left": 1,
+      "up": 1
+    },
+    "flex": {
+      "down": 1,
+      "right": 1,
+      "left": 1,
+      "up": 1
+    }
+  }
+}
