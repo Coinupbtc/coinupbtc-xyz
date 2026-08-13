@@ -32,10 +32,10 @@ The landing hub is **[coinupbtc.com](https://coinupbtc.com/)**
 
 ## Try it
 
+### One command
 ```bash
 git clone https://github.com/Coinupbtc/coinupbtc-xyz.git
-cd coinupbtc-xyz
-./setup.sh
+cd coinupbtc-xyz && ./setup.sh
 # → http://127.0.0.1:8766/
 ```
 
