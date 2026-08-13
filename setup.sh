@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local preview of the coinupbtc.xyz holding page (no build step).
+# Local preview of the coinupbtc.xyz lab (no build step).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 PORT="${PORT:-8766}"

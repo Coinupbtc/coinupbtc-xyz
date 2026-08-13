@@ -1,23 +1,34 @@
-# coinupbtc.xyz
+# coinupbtc.xyz — the lab
+
+![Screenshot](docs/screenshots/hero.png)
+
+## At a glance
 
 | | |
 |---|---|
-| **What it is** | The holding page for `coinupbtc.xyz`, a workshop domain. |
-| **What it's for** | Keep the domain under my control (not registrar parking) and make future use free. |
-| **How to use it** | Open https://coinupbtc.xyz/ — or `./setup.sh` for a local preview. |
+| **What it is** | Three self-contained interactive demos, one HTML file each. |
+| **What it’s for** | Show the mechanism behind work done on my own hardware — not screenshots of it. |
+| **How to use it** | Open https://coinupbtc.xyz/ — pick a card, drag the sliders. Or `./setup.sh` for a local preview. |
 
-The main site is **[coinupbtc.com](https://coinupbtc.com/)** ([repo](https://github.com/Coinupbtc/Coinupbtc.github.io)).
-This one is deliberately a stub.
+The landing hub is **[coinupbtc.com](https://coinupbtc.com/)**
+([repo](https://github.com/Coinupbtc/Coinupbtc.github.io)). This domain is the part you can poke.
 
-## Why this exists as a repo instead of a redirect
+## The demos
 
-GitHub Pages allows **one custom domain per repository**, and `Coinupbtc.github.io` already
-claims `coinupbtc.com`. So `.xyz` needs either a registrar URL-forward or its own repo.
+| | Page | What you do |
+|---|---|---|
+| 01 | [`demos/mempool.html`](demos/mempool.html) | Drag your fee rate. Watch which simulated block takes you. |
+| 02 | [`demos/memory-pack.html`](demos/memory-pack.html) | Pick 1 / 2 / 3 Sparks. Tap models. Watch each 121 GB tank fill. |
+| 03 | [`demos/moire.html`](demos/moire.html) | Nudge layer B. The bands are the disagreement — including the site motif. |
 
-It gets its own repo because the domain's purpose is undecided. With DNS pointed at Pages
-**once**, every future decision — temp project host, a real site, a for-sale page — is a
-`git push`, with no DNS change and no propagation wait. A registrar forward would have to be
-torn down first.
+## Rules these pages follow
+
+- **One file each.** Every demo is a single HTML file with its CSS and JS inline. No backend,
+  no framework, no build step, no bundler, no dependencies beyond a webfont.
+- **No tracking.** No analytics, no cookies, no third-party scripts, no network calls at runtime.
+- **Numbers are measured, not asserted.** Demo 02 uses per-Spark residents from this box.
+  Where a page is a simplification, it says so.
+- **Motion is optional.** Every animation respects `prefers-reduced-motion`.
 
 ## Try it
 
@@ -28,21 +39,18 @@ cd coinupbtc-xyz
 # → http://127.0.0.1:8766/
 ```
 
-## Turning it into something real
-
-Replace the `<main>` block in `index.html` and push. That's the whole procedure.
-Drop the `<meta name="robots" content="noindex">` when you want it indexed.
+Or open `index.html` directly — the demos work from `file://` too.
 
 ## Contact policy
 
-Do **not** add a personal email, real name, employer, school, phone, or street address.
+Pseudonymous: no real name, employer, school, phone, or street address.
 Inbound: [GitHub](https://github.com/Coinupbtc) · [X @coinupbtc](https://x.com/coinupbtc).
 
 ## Stack
 
-One self-contained HTML file — styles inlined on purpose, so changing it is a one-file edit.
-Design tokens match `coinupbtc.com`. The motif is pure CSS (two interfering ring sets).
-No trackers, no cookies, no analytics, no JavaScript.
+Static HTML, one file per page. Fraunces + IBM Plex Mono via Google Fonts. Design tokens match
+`coinupbtc.com` so the two domains read as one brand. The header motif is pure CSS — two
+`repeating-radial-gradient` ring sets, no image and no JavaScript.
 
 ## Custom domain
 

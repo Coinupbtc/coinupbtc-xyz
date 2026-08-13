@@ -1,0 +1,418 @@
+<!doctype html>
+<!--
+  121 GB packer — one tank per Spark. 121 GB is per machine, not a shared pool.
+  Self-contained: no backend, no framework, no build step, no tracking.
+  Residents are measured (or published pool sizes), not a spec sheet.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>121 GB packer — the lab</title>
+  <meta name="description" content="Pack models onto 1, 2, or 3 Sparks. Each tank is 121 GB of unified memory. TP1 and TP2 included.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0e13">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c;
+      --paper: #ece8df; --acid: #c8f54a; --hot: #ff6b5e;
+      --mute: #8b9287; --dim: #5f6660;
+      --line: rgba(236,232,223,.14); --line-soft: rgba(236,232,223,.07);
+      --font-display: Fraunces, Georgia, serif;
+      --font-body: "IBM Plex Mono", ui-monospace, monospace;
+      --pad: clamp(1.15rem, 4vw, 3.5rem);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); background: var(--ink); color: var(--paper);
+      line-height: 1.55; min-height: 100svh; display: flex; flex-direction: column;
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+    a { color: inherit; text-underline-offset: 4px; }
+    a:hover { color: var(--acid); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+    .top {
+      position: sticky; top: 0; z-index: 30;
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute);
+      padding: max(1rem, env(safe-area-inset-top, 0px)) 0 1rem;
+      background: color-mix(in srgb, var(--ink) 92%, transparent);
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .top nav { display: flex; flex-wrap: wrap; }
+    .top nav a, .demo-hop a, footer a {
+      min-height: 44px; display: inline-flex; align-items: center;
+      padding: 0 .65rem; text-decoration: none;
+    }
+    header { padding-block: clamp(1.4rem, 5vw, 3rem) 1rem; }
+    .idx { font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+    h1 {
+      font-family: var(--font-display); font-weight: 700; letter-spacing: -.03em;
+      font-size: clamp(1.9rem, 7vw, 3.4rem); line-height: 1; margin-top: .45rem;
+    }
+    .use {
+      margin-top: 1.1rem; max-width: 62ch;
+      border-left: 2px solid var(--acid); padding: .2rem 0 .2rem 1rem;
+      font-size: .84rem; line-height: 1.65;
+    }
+    .use b { color: var(--acid); font-weight: 500; }
+    main { flex: 1; padding-bottom: clamp(3rem, 7vw, 5rem); }
+    .panel { border: 1px solid var(--line-soft); background: var(--ink-2); padding: clamp(1.1rem, 3vw, 1.7rem); margin-top: 1.4rem; }
+    .topo { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.1rem; }
+    .topo button {
+      font: inherit; min-height: 44px; padding: .55rem 1rem; cursor: pointer;
+      background: var(--ink); color: var(--paper); border: 1px solid var(--line);
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+    .topo button.on { border-color: var(--acid); background: rgba(200,245,74,.1); color: var(--acid); }
+    .stage { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(240px, .85fr); gap: 1.4rem; align-items: start; }
+    @media (max-width: 720px) {
+      .stage { grid-template-columns: 1fr; }
+      .racks { order: -1; }
+    }
+    .mods { display: grid; gap: .5rem; }
+    .mod {
+      font: inherit; text-align: left; cursor: pointer;
+      border: 1px solid var(--line); background: var(--ink);
+      color: var(--paper); padding: .75rem .9rem; min-height: 52px;
+      display: grid; grid-template-columns: 1fr auto; gap: .35rem 1rem; align-items: center;
+    }
+    .mod.on { border-color: var(--acid); background: rgba(200,245,74,.08); }
+    .mod.locked { cursor: not-allowed; }
+    .mod .name { font-family: var(--font-display); font-size: 1.02rem; font-weight: 700; }
+    .mod .why { font-size: .7rem; color: var(--mute); grid-column: 1 / -1; }
+    .mod .gb { font-variant-numeric: tabular-nums; color: var(--acid); letter-spacing: .04em; font-size: .78rem; text-align: right; }
+    .racks {
+      display: grid; gap: .55rem;
+      grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr));
+    }
+    .rack {
+      display: flex; flex-direction: column; gap: .35rem;
+    }
+    .rack .lbl {
+      font-size: .62rem; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--acid); display: flex; justify-content: space-between; gap: .4rem;
+    }
+    .rack.over .lbl { color: var(--hot); }
+    .tank {
+      border: 1px solid var(--line); background: var(--ink);
+      position: relative; overflow: hidden; height: 320px;
+    }
+    .tank.over { border-color: var(--hot); }
+    .tank::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        to top,
+        transparent 0,
+        transparent calc(10% - 1px),
+        rgba(236,232,223,.09) calc(10% - 1px),
+        rgba(236,232,223,.09) 10%
+      );
+      pointer-events: none;
+    }
+    .tank-fill { position: absolute; inset: 0; }
+    .seg {
+      position: absolute; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 .45rem; font-size: .62rem; letter-spacing: .05em; text-transform: uppercase;
+      color: #12141a; overflow: hidden; box-sizing: border-box;
+    }
+    .verdict {
+      margin-top: 1.2rem; border: 1px solid var(--line-soft); background: var(--ink);
+      padding: 1.1rem 1.2rem;
+    }
+    .verdict .big { font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 700; }
+    .verdict .big.ok { color: var(--acid); }
+    .verdict .big.bad { color: var(--hot); }
+    .verdict p { margin-top: .45rem; color: var(--mute); font-size: .84rem; max-width: 62ch; line-height: 1.65; }
+    .lede { margin-top: 1.1rem; max-width: 68ch; color: #d6d3ca; font-size: .92rem; line-height: 1.75; }
+    .story { margin-top: clamp(2.2rem, 6vw, 3.4rem); max-width: 72ch; }
+    .story h2 { font-family: var(--font-display); font-size: clamp(1.3rem, 3.4vw, 1.9rem); margin-bottom: .8rem; }
+    .story p { color: var(--mute); font-size: .87rem; line-height: 1.8; margin-bottom: 1rem; }
+    .story strong { color: var(--paper); font-weight: 500; }
+    .demo-hop {
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem;
+      margin-top: 2rem; padding-top: 1.2rem; border-top: 1px solid var(--line-soft);
+    }
+    footer {
+      border-top: 1px solid var(--line-soft);
+      padding: 1.7rem 0 max(1.7rem, env(safe-area-inset-bottom, 0px));
+      font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+    }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
+    @media (max-width: 480px) {
+      h1 { font-size: clamp(1.8rem, 11vw, 2.4rem); }
+      .tank { height: 240px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .tank-fill { transition: none; } }
+  </style>
+</head>
+<body>
+  <div class="wrap top">
+    <a href="../index.html">← the lab</a>
+    <nav aria-label="Lab">
+      <a href="../index.html">All demos</a>
+      <a href="https://coinupbtc.com/">Hub</a>
+    </nav>
+  </div>
+
+  <header class="wrap">
+    <p class="idx">Demo 02</p>
+    <h1>121 GB packer</h1>
+    <p class="use"><b>Use it:</b> Pick <b>1 / 2 / 3 Sparks</b>. Each column is one machine’s <b>121 GB</b> tank. Tap a model. At 85% full, the tank should look 85% full.</p>
+  </header>
+
+  <main class="wrap">
+    <div class="panel">
+      <div class="topo" id="topo" role="group" aria-label="Cluster size"></div>
+      <div class="stage">
+        <div class="mods" id="mods"></div>
+        <div class="racks" id="racks" aria-label="Per-Spark memory tanks"></div>
+      </div>
+      <div class="verdict">
+        <div class="big ok" id="vBig">—</div>
+        <p id="vText">Toggle a module.</p>
+      </div>
+    </div>
+
+    <p class="lede">
+      121 GB is <b>per Spark</b>, not a shared pool. A 2-Spark cluster is two 121 GB tanks.
+      DS4F in TP2 puts about <b>79 GB of weights on each rank</b> — that is why the live pair
+      looks full, not half empty.
+    </p>
+
+    <section class="story">
+      <h2>TP1, TP2, and the spare</h2>
+      <p>
+        <strong>TP2</strong> (the live cluster) shards DS4F across Spark 1 and Spark 2.
+        <strong>TP1</strong> lives on one machine: helper 35B, Qwen 27B, Gemma, vision 4B.
+        A third Spark is a spare TP1 slot — the cluster can keep running while something
+        else sits on the extra 121 GB.
+      </p>
+      <p>
+        <strong>This is a budget toy, not a live probe.</strong> It will not start or stop
+        anything. H3 rank 0 is the measured 89.4 GB on node 1; rank 1 is 41.4 GB on node 2.
+        Qwen 27B uses the measured 36 GB KV pool. Gemma is the 19 GB Ollama line.
+      </p>
+    </section>
+
+    <nav class="demo-hop" aria-label="Next demo">
+      <a href="mempool.html">← 01 Fee-band router</a>
+      <a href="moire.html">03 Moiré bench →</a>
+    </nav>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><a href="../index.html">← the lab</a></span>
+      <span><a href="https://coinupbtc.com/">coinupbtc.com</a></span>
+      <span>Per-Spark tanks · 121 GB each</span>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+    var PER = 121;
+    var sparks = 2;
+    var OS = { id: "os", name: "OS + Hermes", gb: 8, perSpark: true, always: true, color: "#8b9287",
+      why: "Always on, every Spark. Desktop, kernel, agent stack.", label: "8 GB each" };
+    var MODS = [
+      { id: "ds4f", name: "DS4F-0731", gb: 79.2, kind: "cluster", color: "#c8f54a",
+        why: "79.2 GB per rank. TP2 fills Spark 1 and 2. TP1 on a single Spark.",
+        label: "79.2 GB / rank" },
+      { id: "kv", name: "KV cache", gb: 10.3, kind: "cluster", needs: "ds4f", color: "#a8e04a",
+        why: "Per rank, live util 0.75. Needs DS4F.", label: "10.3 GB / rank" },
+      { id: "vision", name: "Vision 4B", gb: 5.4, kind: "sidecar", color: "#63b6ff",
+        why: "TP1 sidecar. Sits on Spark 2 beside the cluster when you have two.",
+        label: "5.4 GB · TP1" },
+      { id: "helper", name: "Helper 35B", gb: 23, kind: "spare", color: "#d9ff63",
+        why: "llama.cpp NVFP4, TP1. On 3 Sparks it takes the spare. On 2 it displaces the cluster.",
+        label: "23 GB · TP1" },
+      { id: "h3", name: "H3 video", gb: [89.4, 41.4], kind: "h3", minSparks: 2, color: "#ff6b5e",
+        why: "Rank 0 is 89.4 GB on Spark 1. Rank 1 is 41.4 GB. Needs two Sparks.",
+        label: "89.4 + 41.4 · TP2" },
+      { id: "qwen27", name: "Qwen 27B", gb: 36, kind: "spare", color: "#7ec8e3",
+        why: "TP1 deep lane. 36 GB KV pool measured. TP2 deadlocked — not shipped.",
+        label: "36 GB · TP1" },
+      { id: "gemma", name: "Gemma 31B", gb: 19, kind: "spare", color: "#e8c36a",
+        why: "Ollama 19 GB. TP1. Fits a spare Spark.", label: "19 GB · TP1" }
+    ];
+    var on = { os: true, ds4f: true, kv: true, vision: true, helper: false, h3: false, qwen27: false, gemma: false };
+    var byId = {};
+    MODS.forEach(function (m) { byId[m.id] = m; });
+
+    function clusterRanks() { return sparks >= 2 ? [0, 1] : [0]; }
+    function spareRank() { return sparks >= 3 ? 2 : 0; }
+    function gbOn(m, rank) {
+      if (Array.isArray(m.gb)) return m.gb[rank] || 0;
+      return m.gb;
+    }
+    function ranksOf(m) {
+      if (m.perSpark) {
+        var a = []; for (var i = 0; i < sparks; i++) a.push(i); return a;
+      }
+      if (m.kind === "cluster" || m.kind === "h3") return clusterRanks();
+      if (m.kind === "sidecar") return [Math.min(1, sparks - 1)];
+      return [spareRank()];
+    }
+    function shareRank(a, b) {
+      var ra = ranksOf(a), rb = ranksOf(b);
+      return ra.some(function (r) { return rb.indexOf(r) !== -1; });
+    }
+    function reconcile() {
+      var heavies = ["ds4f", "h3", "helper", "qwen27", "gemma"];
+      heavies.forEach(function (id, i) {
+        if (!on[id]) return;
+        heavies.forEach(function (other) {
+          if (other === id || !on[other]) return;
+          if (shareRank(byId[id], byId[other])) {
+            // Cluster wins over a spare if they just started overlapping (Spark count change).
+            if (id === "ds4f") {
+              on[other] = false;
+              if (other === "ds4f") on.kv = false;
+            }
+          }
+        });
+      });
+      if (on.h3 && on.ds4f && sparks >= 2) on.h3 = false;
+      if (!on.ds4f) on.kv = false;
+    }
+    function occupy() {
+      var tanks = [];
+      for (var i = 0; i < sparks; i++) tanks.push([]);
+      function add(m) {
+        if (!on[m.id]) return;
+        ranksOf(m).forEach(function (r) {
+          var g = gbOn(m, r);
+          if (g > 0) tanks[r].push({ name: m.name, gb: g, color: m.color, id: m.id });
+        });
+      }
+      add(OS);
+      MODS.forEach(add);
+      return tanks;
+    }
+    function toggle(m) {
+      if (m.always) return;
+      if (on[m.id]) {
+        on[m.id] = false;
+        if (m.id === "ds4f") on.kv = false;
+        draw();
+        return;
+      }
+      if (m.needs && !on[m.needs]) on[m.needs] = true;
+      var actor = (m.kind === "cluster" && m.id === "kv") ? byId.ds4f : m;
+      var heavies = ["ds4f", "h3", "helper", "qwen27", "gemma"];
+      if (heavies.indexOf(actor.id) !== -1) {
+        heavies.forEach(function (id) {
+          if (id === actor.id || !on[id]) return;
+          if (shareRank(actor, byId[id])) {
+            on[id] = false;
+            if (id === "ds4f") on.kv = false;
+          }
+        });
+      }
+      on[m.id] = true;
+      draw();
+    }
+    function draw() {
+      reconcile();
+      var topo = document.getElementById("topo");
+      topo.innerHTML = "";
+      [1, 2, 3].forEach(function (n) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = n === sparks ? "on" : "";
+        b.textContent = n + " Spark" + (n > 1 ? "s" : "") + (n === 2 ? " · live" : "") +
+          (n === 1 ? " · TP1" : n === 2 ? " · TP2" : " · TP2 + spare");
+        b.addEventListener("click", function () { sparks = n; draw(); });
+        topo.appendChild(b);
+      });
+
+      var modsEl = document.getElementById("mods");
+      modsEl.innerHTML = "";
+      [OS].concat(MODS).forEach(function (m) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "mod" + (on[m.id] ? " on" : "") + (m.always ? " locked" : "");
+        b.innerHTML = '<span class="name">' + m.name + '</span><span class="gb">' +
+          m.label + '</span><span class="why">' + m.why + '</span>';
+        if (!m.always) b.addEventListener("click", function () { toggle(m); });
+        modsEl.appendChild(b);
+      });
+
+      var tanks = occupy();
+      var racks = document.getElementById("racks");
+      racks.style.setProperty("--n", String(sparks));
+      racks.innerHTML = "";
+      var worst = 0;
+      var blocked = on.h3 && sparks < 2;
+      tanks.forEach(function (stack, i) {
+        var used = stack.reduce(function (s, x) { return s + x.gb; }, 0);
+        worst = Math.max(worst, used);
+        var pct = used / PER * 100;
+        var rack = document.createElement("div");
+        rack.className = "rack" + (used > PER ? " over" : "");
+        var lbl = document.createElement("div");
+        lbl.className = "lbl";
+        lbl.innerHTML = "<span>Spark " + (i + 1) + (sparks >= 2 && i < 2 && on.ds4f ? " · TP2" : " · TP1") +
+          "</span><span>" + Math.round(pct) + "%</span>";
+        var tank = document.createElement("div");
+        tank.className = "tank" + (used > PER ? " over" : "");
+        var fill = document.createElement("div");
+        fill.className = "tank-fill";
+        var acc = 0;
+        stack.forEach(function (seg) {
+          var s = document.createElement("div");
+          s.className = "seg";
+          s.style.background = seg.color;
+          var h = seg.gb / PER * 100;
+          s.style.bottom = acc + "%";
+          s.style.height = h + "%";
+          acc += h;
+          s.innerHTML = "<span>" + seg.name + "</span><span>" + seg.gb + "</span>";
+          fill.appendChild(s);
+        });
+        tank.appendChild(fill);
+        rack.appendChild(lbl);
+        rack.appendChild(tank);
+        racks.appendChild(rack);
+      });
+
+      var vBig = document.getElementById("vBig");
+      var vText = document.getElementById("vText");
+      if (blocked) {
+        vBig.className = "big bad";
+        vBig.textContent = "Won't start";
+        vText.textContent = "H3 wants both Sparks. One tank can hold rank 0 on paper — the worker never comes up.";
+      } else if (worst > PER) {
+        vBig.className = "big bad";
+        vBig.textContent = "Won't start";
+        vText.textContent = "A Spark is over by " + (worst - PER).toFixed(1) +
+          " GB. Unified memory does not mint extra. Drop a resident or add a Spark.";
+      } else {
+        var left = PER - worst;
+        vBig.className = "big ok";
+        vBig.textContent = Math.round(worst / PER * 100) + "% full · worst Spark";
+        if (left >= 15) {
+          vText.textContent = left.toFixed(1) + " GB headroom on the fullest Spark. " +
+            sparks + " × 121 GB = " + (sparks * PER) + " GB across the cluster.";
+        } else {
+          vText.textContent = "Tight — " + left.toFixed(1) +
+            " GB left on the fullest Spark. That is what the live 2-Spark cluster feels like.";
+        }
+      }
+    }
+    draw();
+  })();
+  </script>
+</body>
+</html>
