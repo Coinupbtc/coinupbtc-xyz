@@ -1,22 +1,22 @@
 <!doctype html>
 <html lang="en">
 <!--
-  coinupbtc.xyz/training.html — AI training landing (IRL Training).
-  Prep / v1. Pseudonymous. No real name/phone/address.
-  Hands-on local inference training. The hardware is real; the data stays in-house.
+  coinupbtc.xyz/training.html — lab training offer (employers + workforce partners).
+  Not a public school. No open enrollment. Pseudonymous. No real name/phone/address.
+  We train your people, or we run the lab under your credential. Data stays in-house.
 -->
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>AI Training — hands-on, local, in-house</title>
-  <meta name="description" content="Hands-on AI training run on real local hardware. Your data stays in-house. St. Louis & traveling.">
+  <title>Train your team — local AI lab</title>
+  <meta name="description" content="We train your employees on real local hardware. Data stays in-house. Also: lab delivery for colleges and workforce partners. St. Louis and on the road.">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0c0e13">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="The lab">
-  <meta property="og:title" content="AI Training — hands-on, local">
-  <meta property="og:description" content="Run, customize, and secure AI on hardware you own. Your data never leaves the room.">
+  <meta property="og:title" content="Train your team — local AI lab">
+  <meta property="og:description" content="Hands-on AI for your staff, or a lab under your school’s credential. Data never leaves the room.">
   <meta property="og:url" content="https://coinupbtc.xyz/training.html">
   <meta property="og:image" content="https://coinupbtc.xyz/assets/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -39,7 +39,7 @@
       --pad: clamp(1.15rem, 4vw, 4rem);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font-body); background: var(--ink); color: var(--paper); line-height: 1.6; min-height: 100svh; display: flex; flex-direction: column; overflow-x: hidden; }
+    body { font-family: var(--font-body); background: var(--ink); color: var(--paper); line-height: 1.6; min-height: 100svh; display: flex; flex-direction: column; overflow-x: hidden; padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
     a { color: inherit; text-underline-offset: 4px; transition: color .18s ease; }
     a:hover { color: var(--acid); }
     :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
@@ -89,75 +89,93 @@
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main" style="position:absolute;left:-9999px;top:0;background:var(--acid);color:var(--ink);padding:.6rem .9rem;z-index:50;">Skip to content</a>
   <div class="moire" aria-hidden="true"></div>
 
   <div class="wrap top">
-    <strong>AI training</strong>
+    <strong>Train your team</strong>
     <nav aria-label="Site">
       <a href="/">The lab</a>
-      <a href="/training.html" class="active">AI training</a>
+      <a href="/training.html" class="active">Train your team</a>
     </nav>
   </div>
 
   <header class="hero wrap">
-    <h1>AI, hands-on.</h1>
+    <h1>We train your team.</h1>
     <p class="lede">
-      <b>Your data stays in-house.</b> Small cohorts learn to run, customize, and
-      secure real AI on real local hardware — the same DGX-class box big firms use.
-      No slides, no SaaS data-leak. St. Louis &amp; traveling.
+      <b>Not a public school. Not open enrollment.</b>
+      A company or a workforce partner hires us. We bring a real DGX-class lab.
+      Your people run real models. <b>Data never leaves the room.</b>
+      St. Louis, Chicago corridor, and on the road.
     </p>
     <p class="use">
-      <b>Why local matters:</b> process, QC, client, and compliance data shouldn't
-      leave your building. We bring the lab to the problem.
+      <b>Who this is for:</b> employers who want their own staff upskilled,
+      and colleges / job centers / apprenticeship sponsors who need a hardware lab
+      under <em>their</em> credential. We invoice you. We do not enroll the public.
     </p>
   </header>
 
-  <main class="wrap">
+  <main id="main" class="wrap">
     <section>
-      <h2>What we teach</h2>
+      <h2>What we deliver</h2>
       <div class="feature">
-        <div class="lab">Tier 1 · half-day · any team</div>
+        <div class="lab">01 · your employees · half day</div>
         <h3>AI literacy workshop</h3>
-        <span class="lab">what it is, tools, prompt craft, when local beats cloud</span>
-        <p><b>2–4 hours</b>. Everyone leaves able to use AI in their work — and
-        understands why privacy-grade orgs keep it local.</p>
+        <span class="lab">what it is, tools, when local beats cloud</span>
+        <p><b>2–4 hours, up to 12 people, $1,200 flat.</b> Your staff, your site
+        (or ours). They leave able to use AI on Monday — and why QC / client data
+        should not go into a public chatbot.</p>
       </div>
       <div class="feature">
-        <div class="lab">Tier 2 · 1–2 days · technical teams</div>
+        <div class="lab">02 · your technical team · 1–2 days</div>
         <h3>Local inference lab</h3>
-        <span class="lab">run, serve, fine-tune a real model on your own box</span>
-        <p>Load an open model, run it live, serve an endpoint, fine-tune on
-        <b>your</b> data — in-house. This is the flagship; the hardware is the engine.</p>
+        <span class="lab">run, serve, and wire a model to your kind of data</span>
+        <p><b>Up to 8 people, $4,500 flat.</b> Flagship. Load an open model on
+        real hardware, run it live, leave a working setup. Nothing is uploaded
+        to a SaaS.</p>
       </div>
       <div class="feature">
-        <div class="lab">Tier 3 · credential track</div>
-        <h3>AI integration specialist</h3>
-        <span class="lab">DOL registered-apprenticeship path</span>
-        <p>A nationally recognized credential earned on the job. For employers
-        who want a real talent pipeline + grant-backed training.</p>
+        <div class="lab">03 · workforce partners · you keep the paper</div>
+        <h3>Lab under your credential</h3>
+        <span class="lab">colleges, job centers, registered apprenticeships</span>
+        <p>You already enroll students and issue the certificate. We run the
+        hands-on hours — related instruction, a module, a lab day.
+        <b>We do not operate our own public school.</b></p>
       </div>
     </section>
 
     <section>
-      <h2>For employers</h2>
+      <h2>How you hire us</h2>
       <div class="offer">
         <div class="tier">
-          <span class="num">01 · team</span>
-          <span class="nm">AI literacy</span>
-          <ul><li>any employee, any level</li><li>2–4 hrs, small cohort</li><li>tools + prompt + when-local</li></ul>
-          <div class="price"><b>flat fee</b> — easy first engagement</div>
+          <span class="num">Employer</span>
+          <span class="nm">Train your staff</span>
+          <ul>
+            <li>your people only</li>
+            <li>on-site or in our lab</li>
+            <li>flat fee, written scope first</li>
+          </ul>
+          <div class="price"><b>$1,200</b> literacy · <b>$4,500</b> lab</div>
         </div>
         <div class="tier">
-          <span class="num">02 · technical</span>
-          <span class="nm">Local inference lab</span>
-          <ul><li>run + serve + fine-tune</li><li>your data in-house</li><li>leave a working setup</li></ul>
-          <div class="price"><b>premium</b> — hardware + instruction</div>
+          <span class="num">College / job center</span>
+          <span class="nm">Subcontract the lab</span>
+          <ul>
+            <li>your students, your certificate</li>
+            <li>we invoice the institution</li>
+            <li>St. Louis or Chicago partners</li>
+          </ul>
+          <div class="price">send the syllabus · we slot in</div>
         </div>
         <div class="tier">
-          <span class="num">03 · pipeline</span>
-          <span class="nm">Apprenticeship</span>
-          <ul><li>DOL credential</li><li>grant-backed per student</li><li>long-term hiring path</li></ul>
-          <div class="price">let's talk</div>
+          <span class="num">Apprenticeship sponsor</span>
+          <span class="nm">Related instruction</span>
+          <ul>
+            <li>you keep the DOL registration</li>
+            <li>we teach the hardware hours</li>
+            <li>manufacturing / quality fit</li>
+          </ul>
+          <div class="price">let’s talk affiliation</div>
         </div>
       </div>
     </section>
@@ -165,19 +183,20 @@
     <section>
       <h2>Talk to us</h2>
       <div class="cta">
-        <a class="button" href="https://discord.gg/">Join the IRL training Discord</a>
-        <span>or email — reply within a day</span>
+        <a class="button" href="https://discord.gg/u5TcVHhMgt">Join Discord</a>
+        <a class="button" href="https://x.com/coinupbtc">Message on X</a>
       </div>
       <p class="use" style="margin-top:1.2rem">
-        <b>Formal:</b> U.S. LLC. Scheduling, scope, and flat fees confirmed before any
-        engagement. We can come to your site anywhere on the road.
+        <b>Formal:</b> U.S. LLC. Scope and fee in writing before any engagement.
+        We can come to your site. We do not take public tuition or run
+        open-enrollment classes.
       </p>
     </section>
   </main>
 
   <footer>
     <div class="wrap">
-      <span>IRL training</span>
+      <span>Train your team</span>
       <span><a href="/">coinupbtc.xyz</a> · <a href="https://github.com/Coinupbtc">GitHub</a> · <a href="https://x.com/coinupbtc">X</a></span>
       <span>your data stays local</span>
     </div>
