@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>NFT Pawn — Instant + Manual + Seasons</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <script>
+  (function () {
+    try {
+      var path = location.pathname || '/';
+      var mounts = ["/pawn", "/x/ur-hour"];
+      for (var i = 0; i < mounts.length; i++) {
+        var m = mounts[i];
+        if (path === m) { location.replace(m + "/" + (location.search||"") + (location.hash||"")); return; }
+        if (path.indexOf(m + "/") === 0) {
+          var b = document.createElement("base"); b.href = m + "/";
+          document.head.insertBefore(b, document.head.firstChild);
+          return;
+        }
+      }
+    } catch (e) {}
+  })();
+  </script>
+  <style>
+    :root {
+      --bg:#0a0a0a; --panel:#111113; --line:#3a3e46; --text:#ededed;
+      --muted:#99a1af; --go:#5ffe1b; --ink:#0a0a0a; --pink:#ff2d95;
+      --blue:#0082f3; --yellow:#ffff66; --cyan:#00f0ff; --red:#ff4d6d; --chip:#1a1a1e;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; color:var(--text);
+      font-family:"IBM Plex Mono","Courier New",Courier,monospace;
+      font-size:15px; line-height:1.45; letter-spacing:-0.02em;
+    }
+    body {
+      background:
+        radial-gradient(circle at 12% 8%, rgba(255,45,149,.35), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(95,254,27,.28), transparent 32%),
+        radial-gradient(circle at 78% 78%, rgba(0,130,243,.32), transparent 30%),
+        radial-gradient(circle at 18% 72%, rgba(255,255,102,.22), transparent 26%),
+        radial-gradient(circle at 50% 50%, rgba(0,240,255,.12), transparent 40%),
+        var(--bg);
+      min-height:100vh;
+    }
+    header {
+      display:flex; justify-content:space-between; gap:12px; align-items:center;
+      padding:12px 18px; border-bottom:1px solid var(--line);
+      position:sticky; top:0; z-index:8;
+      background:rgba(10,10,10,.88); backdrop-filter:blur(8px);
+    }
+    .brand { display:flex; gap:10px; align-items:center; }
+    img.logo {
+      width:44px; height:44px; border-radius:0; background:#000; border:2px solid var(--go);
+      object-fit:cover; display:block;
+    }
+    h1 { margin:0; font-size:16px; font-weight:600; text-transform:uppercase; letter-spacing:.12em; }
+    h2, h3 { font-size:13px; text-transform:uppercase; letter-spacing:.14em; font-weight:600; }
+    .sub { color:var(--muted); font-size:12px; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    button, select, input {
+      font:inherit; border-radius:0; border:1px solid var(--line);
+      background:#0a0a0a; color:var(--text); padding:8px 12px;
+    }
+    button { cursor:pointer; text-transform:uppercase; letter-spacing:.08em; font-size:12px; }
+    button.primary { background:var(--go); color:var(--ink); font-weight:700; border:1px solid #fff; }
+    button.primary:hover { background:var(--yellow); }
+    button.ghost { background:transparent; color:var(--cyan); border-color:var(--cyan); }
+    button.danger { background:var(--pink); color:#fff; border-color:#fff; }
+    nav { display:flex; gap:0; padding:0 18px; overflow:auto; border-bottom:1px solid var(--line); background:rgba(10,10,10,.6); }
+    nav button { border:0; border-bottom:2px solid transparent; background:transparent; color:var(--muted); border-radius:0; padding:12px 14px; }
+    nav button.on { color:var(--ink); background:var(--go); border-bottom-color:var(--pink); }
+    .wrap { max-width:1120px; margin:0 auto; padding:18px 18px 56px; }
+    .err { color:var(--pink); min-height:1.2em; font-size:13px; }
+    .gate {
+      max-width:640px; margin:48px auto; background:rgba(17,17,19,.92);
+      border:2px solid var(--pink); padding:28px;
+      box-shadow:8px 8px 0 var(--blue);
+    }
+    table { width:100%; border-collapse:collapse; background:rgba(10,10,10,.75); }
+    th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); }
+    th { color:var(--yellow); font-size:11px; text-transform:uppercase; letter-spacing:.14em; font-weight:600; background:#000; }
+    tr:hover td { background:rgba(95,254,27,.08); cursor:pointer; }
+    .col { display:flex; gap:10px; align-items:center; }
+    .col img { width:44px; height:44px; border-radius:0; object-fit:cover; border:2px solid var(--cyan); }
+    .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; }
+    .card {
+      background:rgba(10,10,10,.82); border:2px solid var(--yellow); overflow:hidden; border-radius:0;
+    }
+    .card:nth-child(3n) { border-color:var(--pink); }
+    .card:nth-child(3n+1) { border-color:var(--go); }
+    .card:nth-child(3n+2) { border-color:var(--blue); }
+    .card img.hero { width:100%; aspect-ratio:1; object-fit:cover; display:block; }
+    .card .body { padding:10px 12px 12px; }
+    .muted { color:var(--muted); font-size:12px; }
+    a { color:var(--go); }
+    .tag { font-size:11px; padding:2px 7px; border-radius:0; background:#000; color:var(--yellow); border:1px solid var(--yellow); text-transform:uppercase; }
+    .tag.ok { color:var(--go); border-color:var(--go); } .tag.bad { color:var(--pink); border-color:var(--pink); }
+    .statgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0 18px; }
+    .stat { background:rgba(10,10,10,.8); border:1px solid var(--line); padding:12px; }
+    .stat:nth-child(1) { border-color:var(--go); }
+    .stat:nth-child(2) { border-color:var(--pink); }
+    .stat:nth-child(3) { border-color:var(--blue); }
+    .stat:nth-child(4) { border-color:var(--yellow); }
+    .stat span { font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); }
+    .stat b { display:block; font-size:22px; margin-top:6px; font-weight:600; }
+    form.grid { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; align-items:end; background:rgba(10,10,10,.8); padding:14px; border:2px solid var(--blue); margin-bottom:16px; }
+    form.grid label { display:block; font-size:11px; color:var(--cyan); margin-bottom:4px; text-transform:uppercase; letter-spacing:.1em; }
+    form.grid input, form.grid select { width:100%; }
+    .offer { border:1px solid var(--line); padding:12px; margin-bottom:10px; background:rgba(10,10,10,.82); }
+    .contract { font-size:11px; color:var(--cyan); background:#000; padding:8px; border:1px dashed var(--pink); word-break:break-word; margin-top:8px; }
+    dialog { border:2px solid var(--go); background:#0a0a0a; color:var(--text); border-radius:0; width:min(92vw,460px); box-shadow:10px 10px 0 var(--pink); }
+    dialog::backdrop { background:rgba(0,0,0,.7); }
+    .wallets { display:grid; gap:8px; margin-top:12px; }
+    .wallets button { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:10px 12px; text-transform:none; letter-spacing:0; }
+    .wallets img { width:28px; height:28px; border-radius:0; }
+    .hidden { display:none !important; }
+    .callout { background:rgba(10,10,10,.82); border:2px solid var(--yellow); padding:14px; margin-bottom:14px; }
+    @media (max-width:900px) { form.grid, .statgrid { grid-template-columns:1fr; } header { flex-wrap:wrap; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img class="logo" src="logo-mark.png" alt="NFT Pawn — three-ball pawnbroker sign" />
+      <div>
+        <h1>NFT Pawn</h1>
+        <div class="sub">Ultra Rares on Robinhood Chain · connect wallet · independent desk</div>
+      </div>
+    </div>
+    <div class="row">
+      <span class="muted" id="walletLabel">Not connected</span>
+      <button class="ghost" id="addChain">Add Robinhood Chain</button>
+      <button class="primary" id="connectBtn">Connect wallet</button>
+      <button class="ghost" id="reset">Reset</button>
+    </div>
+  </header>
+
+  <div class="wrap" id="gate">
+    <div class="gate">
+      <h2>Connect a wallet</h2>
+      <p class="muted">Mainnet test for <b>Ultra Rares</b> on Robinhood Chain (420 · OpenSea floor).<br>
+      Any EIP-1193 / EIP-6963 wallet: Rabby, MetaMask, Robinhood Wallet, Coinbase, OKX, Rainbow…<br>
+      Instant + manual matching still works. <b>NFT is not escrowed on-chain until NftPawn is deployed.</b></p>
+      <div class="row" style="margin-top:16px">
+        <button class="primary" id="connectBtn2">Connect wallet</button>
+        <button class="ghost" id="addChainGate">Add Robinhood Chain</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <nav>
+      <button data-tab="nfts" class="on">My NFTs</button>
+      <button data-tab="instant">Instant</button>
+      <button data-tab="manual">Manual</button>
+      <button data-tab="lend">Lend</button>
+      <button data-tab="loans">Loans</button>
+      <button data-tab="rewards">Rewards</button>
+    </nav>
+    <div class="wrap">
+      <p class="err" id="err"></p>
+      <div class="statgrid" id="stats"></div>
+
+      <section id="tab-nfts">
+        <p class="muted">Pawnable inventory for this wallet. Instant take uses the collection’s top bid. Manual posts a request a lender must countersign.</p>
+        <div class="cards" id="myNfts"></div>
+      </section>
+
+      <section id="tab-instant" class="hidden">
+        <p class="muted">Pre-funded book. Top bid = highest ETH still open. One collection: Ultra Rares.</p>
+        <table><thead><tr><th>Collection</th><th>Floor</th><th>Top bid</th><th>Fee</th><th>Days</th><th>Yours</th></tr></thead>
+        <tbody id="colBody"></tbody></table>
+        <div id="book" style="margin-top:18px"></div>
+      </section>
+
+      <section id="tab-manual" class="hidden">
+        <p class="muted">Borrower posts terms. NFT stays in their wallet until a lender countersigns (then escrow + payout).</p>
+        <h3>Open requests</h3>
+        <div id="reqList"></div>
+        <h3>Your requests</h3>
+        <div id="myReq"></div>
+      </section>
+
+      <section id="tab-lend" class="hidden">
+        <form class="grid" id="lendForm">
+          <div><label>Collection</label><select id="lendCol"></select></div>
+          <div><label>Loan per NFT (ETH)</label><input id="lendAmt" type="number" min="0" step="0.0001" required></div>
+          <div><label>Total (ETH)</label><input id="lendTot" type="number" min="0" step="0.0001" required></div>
+          <div><label>Fee % (max 10)</label><input id="lendFee" type="number" min="0" max="10" step="0.1" value="5" required></div>
+          <div><label>Term</label><input value="1 hour" disabled></div>
+          <button class="primary" type="submit">Lock ETH on-chain</button>
+        </form>
+        <p class="muted" id="lendHint">1-hour pawn. Your ETH goes into HourPawn. If they repay in time you get ETH+fee; if not you claim the Ultra Rare. Practice only with wallets you control.</p>
+        <div class="row" style="margin-bottom:12px">
+          <button id="deployHp">Deploy HourPawn (once)</button>
+        </div>
+        <h3>Your instant offers</h3>
+        <div id="myBids"></div>
+      </section>
+
+      <section id="tab-loans" class="hidden">
+        <p class="muted">On-chain 1-hour loans. Repay exact ETH+fee before the timer or the lender claims the NFT.</p>
+        <div id="loanList"></div>
+        <h3 class="muted">Tape</h3>
+        <div class="muted" id="tape"></div>
+      </section>
+
+      <section id="tab-rewards" class="hidden">
+        <div class="callout" id="tokSplit"></div>
+        <div class="callout" id="seasonCard"></div>
+        <p class="muted" id="rules"></p>
+        <p class="muted" id="rhBase"></p>
+        <h3>Leaderboard (live season)</h3>
+        <table><thead><tr><th>#</th><th>Wallet</th><th>Season pts</th><th>Lifetime</th><th>PAWN</th></tr></thead>
+        <tbody id="board"></tbody></table>
+        <div class="row" style="margin-top:14px">
+          <button id="endSeason">Settle live season (demo)</button>
+        </div>
+        <p class="muted" id="contractNote"></p>
+      </section>
+    </div>
+  </div>
+
+  <dialog id="dlgWallet">
+    <h3>Connect a wallet</h3>
+    <p class="muted">EVM injected wallets (EIP-6963). Rabby, MetaMask, Robinhood Wallet, Coinbase, OKX, Rainbow all work. We never take your keys.</p>
+    <div class="wallets" id="walletList"></div>
+    <p class="muted" style="margin-top:12px">Not installed:
+      <a href="https://rabby.io" target="_blank" rel="noopener">Rabby</a> ·
+      <a href="https://metamask.io/download" target="_blank" rel="noopener">MetaMask</a> ·
+      <a href="https://robinhood.com/us/en/crypto/wallet" target="_blank" rel="noopener">Robinhood Wallet</a> ·
+      <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener">Coinbase Wallet</a>
+    </p>
+    <div class="row" style="justify-content:flex-end"><button id="walletX">Close</button></div>
+  </dialog>
+  <dialog id="dlgTake">
+    <h3>Sign instant loan</h3>
+    <p class="muted" id="takeTerms"></p>
+    <label class="muted">Collateral</label>
+    <select id="takeNft" style="width:100%;margin:8px 0"></select>
+    <div class="row" style="justify-content:flex-end">
+      <button id="takeX">Cancel</button>
+      <button class="primary" id="takeGo">Sign & receive funds</button>
+    </div>
+  </dialog>
+  <dialog id="dlgMan">
+    <h3>Post manual request</h3>
+    <p class="muted" id="manNft"></p>
+    <label class="muted">Amount ETH</label><input id="manAmt" type="number" step="0.0001" style="width:100%">
+    <label class="muted">Fee %</label><input id="manFee" type="number" value="5" style="width:100%">
+    <label class="muted">Days 1–7</label><input id="manDays" type="number" min="1" max="7" value="7" style="width:100%">
+    <p class="muted">No cash until a lender countersigns. You can cancel until then.</p>
+    <div class="row" style="justify-content:flex-end;margin-top:10px">
+      <button id="manX">Cancel</button>
+      <button class="primary" id="manGo">Post request</button>
+    </div>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const ROOT = (function () {
+      const p = location.pathname || "/";
+      if (p.indexOf("/x/ur-hour/") === 0) return "/x/ur-hour";
+      if (p.indexOf("/pawn/") === 0) return "/pawn";
+      return "";
+    })();
+    const UR = "0x923aaaa62c12505b1bbb57ed52b730d6462c01c5";
+    let wallet = localStorage.getItem("pawn-wallet") || "";
+    let state = null, tab = "nfts", takeBid = null, manNft = null;
+    const money = (n) => Number(n).toLocaleString(undefined, {maximumFractionDigits: 5}) + " ETH";
+    const RH = {
+      chainId: "0x1237",
+      chainName: "Robinhood Chain",
+      nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+      rpcUrls: ["https://rpc.mainnet.chain.robinhood.com"],
+      blockExplorerUrls: ["https://robinhoodchain.blockscout.com"],
+    };
+    let ethProvider = null;
+    const discovered = [];
+    window.addEventListener("eip6963:announceProvider", (ev) => {
+      const d = ev.detail;
+      if (!d || !d.info || !d.provider) return;
+      if (discovered.some(x => x.info.uuid === d.info.uuid || x.info.rdns === d.info.rdns)) return;
+      discovered.push(d);
+    });
+    try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (e) {}
+    function getProvider() {
+      if (ethProvider) return ethProvider;
+      if (window.ethereum && window.ethereum.isRabby) return window.ethereum;
+      if (window.rabby) return window.rabby;
+      return window.ethereum || null;
+    }
+    async function ensureChain() {
+      const p = getProvider();
+      if (!p) throw new Error("Connect a wallet first.");
+      try {
+        await p.request({ method: "wallet_switchEthereumChain", params: [{ chainId: RH.chainId }] });
+      } catch (e) {
+        if (e && (e.code === 4902 || String(e.message||"").includes("Unrecognized"))) {
+          await p.request({ method: "wallet_addEthereumChain", params: [RH] });
+        } else throw e;
+      }
+      const cid = await p.request({ method: "eth_chainId" });
+      if (cid !== RH.chainId) throw new Error("Switch to Robinhood Chain (id 4663).");
+    }
+    async function assertSafe() {
+      const p = getProvider();
+      if (!p) throw new Error("Connect a wallet first.");
+      await ensureChain();
+      const acc = await p.request({ method: "eth_accounts" });
+      if (!acc || !acc[0]) throw new Error("No account. Click Connect.");
+      if (wallet && acc[0].toLowerCase() !== wallet.toLowerCase())
+        throw new Error("Connected account does not match this session. Reconnect.");
+      return { p, from: acc[0] };
+    }
+    let hpArt = null;
+    async function loadArt() {
+      if (hpArt) return hpArt;
+      hpArt = await fetch(ROOT + "/hourpawn.json").then((r) => r.json());
+      return hpArt;
+    }
+    async function hpSigner() {
+      const { p, from } = await assertSafe();
+      if (!window.ethers) throw new Error("ethers failed to load.");
+      const provider = new ethers.BrowserProvider(p, Number(RH.chainId));
+      const signer = await provider.getSigner();
+      const art = await loadArt();
+      const addr = state.contracts && state.contracts.hourPawn;
+      const c = addr ? new ethers.Contract(addr, art.abi, signer) : null;
+      return { from, signer, art, c, addr };
+    }
+    const short = (a) => a ? a.slice(0,6)+"…"+a.slice(-4) : "";
+    const err = (m) => { $("err").textContent = m || ""; };
+
+    async function api(path, body) {
+      const opt = { headers: { "Content-Type": "application/json" } };
+      if (wallet) opt.headers["X-Wallet"] = wallet;
+      if (body) { opt.method = "POST"; opt.body = JSON.stringify(body); }
+      try {
+        const r = await fetch(ROOT + path, { ...opt, signal: AbortSignal.timeout(2500) });
+        if (r.ok) return await r.json();
+      } catch (e) {}
+      return staticApi(path, body);
+    }
+    function hpFromUrl() {
+      try { return new URLSearchParams(location.search).get("hp"); } catch (e) { return null; }
+    }
+    async function fetchUrNfts(owner) {
+      const items = [];
+      let url = `https://robinhoodchain.blockscout.com/api/v2/tokens/${UR}/instances?holder_address_hash=${owner}`;
+      for (let n = 0; n < 10; n++) {
+        const d = await fetch(url).then((r) => r.json());
+        for (const it of (d.items || [])) {
+          const tok = Number(it.id);
+          const meta = it.metadata || {};
+          let img = it.image_url || meta.image || "";
+          if (img.startsWith("ipfs://")) img = "https://dweb.link/ipfs/" + img.slice(7);
+          items.push({
+            id: "ur-" + tok, token: tok, name: meta.name || ("Ultra Rares #" + tok),
+            image: img, collection: "ultra-rares", contract: UR,
+            owner: ((it.owner && it.owner.hash) || owner).toLowerCase(),
+            floor_eth: 0.0132, escrow: false,
+          });
+        }
+        if (!d.next_page_params) break;
+        const qs = Object.entries(d.next_page_params).map(([k,v]) => k+"="+encodeURIComponent(v)).join("&");
+        url = `https://robinhoodchain.blockscout.com/api/v2/tokens/${UR}/instances?` + qs;
+      }
+      return items;
+    }
+    async function staticApi(path, body) {
+      const w = (body && body.address) || wallet || "";
+      let hp = localStorage.getItem("hourPawn") || hpFromUrl() || "";
+      if (body && body.action === "set_hourpawn" && body.address) {
+        hp = body.address.toLowerCase();
+        localStorage.setItem("hourPawn", hp);
+        try {
+          const u = new URL(location.href);
+          u.searchParams.set("hp", hp);
+          history.replaceState({}, "", u);
+        } catch (e) {}
+      }
+      let nfts = [];
+      if (w && w.startsWith("0x")) {
+        try { nfts = await fetchUrNfts(w.toLowerCase()); } catch (e) {}
+      }
+      let eth = 0;
+      try {
+        if (w && window.ethers) {
+          const p = new ethers.JsonRpcProvider(RH.rpcUrls[0], 4663);
+          eth = Number(ethers.formatEther(await p.getBalance(w)));
+        }
+      } catch (e) {}
+      return {
+        wallet: w ? w.toLowerCase() : null,
+        me: w ? { address: w.toLowerCase(), eth, season_points: 0, tokens: 0, lifetime_points: 0 } : null,
+        est_tokens: 0, demo_day_sec: 3600, now: Date.now()/1000,
+        collections: [{
+          id: "ultra-rares", name: "Ultra Rares", blurb: "420 · Robinhood Chain",
+          contract: UR, chainId: 4663, supply: 420, floor_eth: 0.0132,
+          logo: "logo-mark.png", owned: nfts.length, book: [], top: null, manual_open: 0,
+        }],
+        nfts, my_nfts: nfts, bids: [], requests: [], loans: [], events: [],
+        seasons: [], current_season: 1, leaderboard: [], season_points_total: 0,
+        contracts: {
+          chainId: 4663, nft: UR, hourPawn: hp || null, termSeconds: 3600,
+          explorer: "https://robinhoodchain.blockscout.com",
+          note: hp ? "1-hour ETH pawn live." : "Deploy HourPawn once, then lock ETH on-chain.",
+        },
+        tokenomics: { token: "PAWN", supply: 100000000, split: [], rh_base: [] },
+        points_rules: {},
+      };
+    }
+    async function act(body) {
+      try { state = await api("/api/act", body); err(""); render(); }
+      catch (e) { err(e.message); }
+    }
+    async function setWallet(addr) {
+      state = await api("/api/act", { action: "connect", address: addr });
+      wallet = state.wallet; localStorage.setItem("pawn-wallet", wallet); err(""); render();
+    }
+    function fallbackWallets() {
+      const out = [];
+      const eth = window.ethereum;
+      if (eth && eth.isRabby) out.push({ info: { name: "Rabby", rdns: "io.rabby", uuid: "inj-rabby" }, provider: eth });
+      else if (window.rabby) out.push({ info: { name: "Rabby", rdns: "io.rabby", uuid: "inj-rabby" }, provider: window.rabby });
+      if (eth && eth.isMetaMask && !eth.isRabby) out.push({ info: { name: "MetaMask", rdns: "io.metamask", uuid: "inj-mm" }, provider: eth });
+      if (eth && eth.isCoinbaseWallet) out.push({ info: { name: "Coinbase Wallet", rdns: "com.coinbase.wallet", uuid: "inj-cb" }, provider: eth });
+      if (eth && !out.some(x => x.provider === eth))
+        out.push({ info: { name: eth.isRabby ? "Rabby" : "Injected EVM wallet", rdns: "injected", uuid: "inj" }, provider: eth });
+      return out;
+    }
+    function renderWalletList() {
+      try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (e) {}
+      const list = discovered.length ? discovered : fallbackWallets();
+      const el = $("walletList");
+      if (!list.length) {
+        el.innerHTML = `<p class="muted">No injected EVM wallet found. Install Rabby, MetaMask, or Robinhood Wallet, then reload.</p>`;
+        return;
+      }
+      el.innerHTML = list.map((w, i) => {
+        const icon = w.info.icon ? `<img src="${w.info.icon}" alt="">` : `<span class="logo" style="width:28px;height:28px;font-size:12px">W</span>`;
+        return `<button data-w="${i}">${icon}<span><b>${w.info.name}</b><div class="muted">${w.info.rdns || "EIP-1193"}</div></span></button>`;
+      }).join("");
+      el.querySelectorAll("button[data-w]").forEach(btn => {
+        btn.onclick = () => connectProvider(list[Number(btn.dataset.w)]);
+      });
+    }
+    async function connectProvider(w) {
+      try {
+        ethProvider = w.provider;
+        await ensureChain();
+        const acc = await ethProvider.request({ method: "eth_requestAccounts" });
+        if (ethProvider.on) {
+          ethProvider.on("accountsChanged", (a) => { if (a && a[0]) setWallet(a[0]); });
+          ethProvider.on("chainChanged", () => ensureChain().catch(()=>{}));
+        }
+        $("dlgWallet").close();
+        await setWallet(acc[0]);
+      } catch (e) { err(e.message || String(e)); }
+    }
+    function connectInjected() {
+      renderWalletList();
+      $("dlgWallet").showModal();
+    }
+    function showApp(on) { $("gate").classList.toggle("hidden", on); $("app").classList.toggle("hidden", !on); }
+    function setTab(id) {
+      tab = id;
+      document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === id));
+      ["nfts","instant","manual","lend","loans","rewards"].forEach(t => $("tab-"+t).classList.toggle("hidden", t !== id));
+    }
+    function countdown(due) {
+      const s = Math.max(0, due - Date.now()/1000);
+      if (s <= 0) return "PAST DUE";
+      if (state.demo_day_sec >= 86400) return Math.floor(s/3600)+"h";
+      return Math.floor(s/state.demo_day_sec)+"d analog · "+Math.ceil(s)+"s";
+    }
+
+    function render() {
+      const on = !!(state && state.wallet); showApp(on); if (!on) return;
+      $("walletLabel").textContent = `${short(state.wallet)} · ${money(state.me.eth)} · ${state.me.season_points} pts`;
+      $("connectBtn").textContent = "Switch wallet";
+      const mine = state.my_nfts.filter(n => !n.escrow);
+      const liveN = state.loans.filter(L => L.status==="live" && (L.borrower===wallet || L.lender===wallet)).length;
+      const sea = state.seasons.find(s => s.id === state.current_season);
+      $("stats").innerHTML = `
+        <div class="stat"><span class="muted">ETH on RH</span><b>${money(state.me.eth)}</b></div>
+        <div class="stat"><span class="muted">Pawnable</span><b>${mine.length}</b></div>
+        <div class="stat"><span class="muted">${sea.name} pts</span><b>${state.me.season_points}</b></div>
+        <div class="stat"><span class="muted">Est. PAWN</span><b>${Number(state.est_tokens).toFixed(1)}</b></div>`;
+
+      $("myNfts").innerHTML = state.my_nfts.length ? state.my_nfts.map(n => {
+        const col = state.collections.find(c => c.id === n.collection);
+        const top = col.top;
+        if (n.escrow) return card(n, col, `<span class="tag">In escrow</span>`);
+        return card(n, col, `
+          ${top ? `<button class="primary" data-take="${top.bid_id}" data-nft="${n.id}">Instant ${money(top.amount)}</button>` : `<span class="muted">No instant bid</span>`}
+          <button data-man="${n.id}" style="margin-top:6px">Manual request</button>`);
+      }).join("") : `<p class="muted">No Ultra Rares in this wallet on Robinhood Chain. Contract 0x923A…01c5.</p>`;
+
+      $("colBody").innerHTML = state.collections.map(c => {
+        const t = c.top;
+        return `<tr data-col="${c.id}"><td><div class="col"><img src="${c.logo || c.cover}"><div><b>${c.name}</b><div class="muted">${c.blurb}</div></div></div></td>
+          <td>${money(c.floor_eth)}</td><td>${t ? money(t.amount)+` <span class="muted">${t.ltv}% LTV</span>` : "—"}</td>
+          <td>${t ? t.fee_pct+"%" : "—"}</td><td>${t ? t.days+"d" : "—"}</td><td>${c.owned}</td></tr>`;
+      }).join("");
+
+      $("lendCol").innerHTML = state.collections.map(c => `<option value="${c.id}">${c.name} · floor ${money(c.floor_eth)}</option>`).join("");
+      const myBids = state.bids.filter(b => b.lender===wallet && b.status==="open");
+      $("myBids").innerHTML = myBids.length ? myBids.map(b => {
+        const c = state.collections.find(x => x.id===b.collection);
+        return `<div class="offer"><b>${c.name}</b> instant · ${money(b.amount)} · ${b.fee_pct}% · ${b.days}d
+          <div class="muted">Remaining ${money(b.remaining)} / ${money(b.total)}</div>
+          <button data-cancel="${b.id}">Cancel</button></div>`;
+      }).join("") : `<p class="muted">No instant offers from this wallet.</p>`;
+
+      const openReq = state.requests.filter(r => r.status==="open");
+      $("reqList").innerHTML = openReq.length ? openReq.map(r => {
+        const n = state.nfts.find(x => x.id===r.nft_id);
+        const mineR = r.borrower===wallet;
+        return `<div class="offer"><span class="tag">manual</span> <b>${n.name}</b> · ${money(r.amount)} @ ${r.fee_pct}% / ${r.days}d
+          <div class="muted">borrower ${short(r.borrower)}</div>
+          ${mineR ? `<button data-cxreq="${r.id}">Cancel request</button>` :
+            `<button class="primary" data-cs="${r.id}">Countersign & fund</button>`}</div>`;
+      }).join("") : `<p class="muted">No open manual requests.</p>`;
+      $("myReq").innerHTML = state.requests.filter(r => r.borrower===wallet).length ? "" : `<p class="muted">Post from My NFTs.</p>`;
+
+      $("loanList").innerHTML = state.loans.length ? [...state.loans].reverse().map(L => {
+        const n = state.nfts.find(x => x.id===L.nft_id);
+        let btn = "";
+        if (L.status==="live" && L.borrower===wallet) btn = `<button class="primary" data-repay="${L.id}">Repay ${money(L.repay_amount)}</button>`;
+        if (L.status==="live" && L.lender===wallet && Date.now()/1000 > L.due_at) btn = `<button class="danger" data-claim="${L.id}">Claim NFT</button>`;
+        return `<div class="offer"><span class="tag">${L.kind}</span> <span class="tag ${L.status==="defaulted"?"bad":"ok"}">${L.status==="live"?countdown(L.due_at):L.status}</span>
+          <div><b>${n.name}</b> · ${money(L.amount)} @ ${L.fee_pct}% / ${L.days}d</div>
+          <div class="contract">${L.contract}</div>${btn}</div>`;
+      }).join("") : `<p class="muted">No loans.</p>`;
+      $("tape").innerHTML = (state.events||[]).map(e => "• "+e.msg).join("<br>");
+
+      const tok = state.tokenomics || {};
+      $("tokSplit").innerHTML = `<b>${tok.token || "PAWN"}</b> fixed supply ${(tok.supply||0).toLocaleString()}
+        <div class="muted">${tok.note||""}</div>` +
+        (tok.split||[]).map(b => `<div>${b.pct}% · ${b.bucket} · ${Number(b.amount).toLocaleString()}</div>`).join("");
+      $("seasonCard").innerHTML = state.seasons.map(s =>
+        `<div style="margin-bottom:8px"><b>${s.name}</b> · ${Number(s.allocation).toLocaleString()} PAWN (${s.pct_supply||"?"}%) · <span class="tag">${s.status}</span>
+        <div class="muted">${s.blurb||""}</div>
+        ${s.id===state.current_season && s.status==="live" ? `your pts ${state.me.season_points} / ${state.season_points_total} · est ${Number(state.est_tokens).toFixed(2)} PAWN` : ""}</div>`
+      ).join("");
+      $("rules").textContent = Object.values(state.points_rules).join(" ");
+      $("rhBase").textContent = "RH base: " + ((tok.rh_base||[]).join(" "));
+      $("board").innerHTML = state.leaderboard.map((r,i) =>
+        `<tr><td>${i+1}</td><td>${r.label||short(r.address)} ${r.address===wallet?"(you)":""}</td><td>${r.points}</td><td>${r.lifetime}</td><td>${Number(r.tokens).toFixed(2)}</td></tr>`
+      ).join("");
+      $("contractNote").textContent = `HourPawn ${state.contracts.hourPawn || "(not deployed)"} · Ultra Rares ${state.contracts.nft} · chain ${state.contracts.chainId}. ${state.contracts.note}`;
+      setTab(tab);
+    }
+    function card(n, col, actions) {
+      return `<div class="card"><img class="hero" src="${n.image || col.logo}"><div class="body"><b>${n.name}</b>
+        <div class="muted">${col.name} · floor ${money(n.floor_eth || col.floor_eth)}</div><div style="margin-top:8px">${actions}</div></div></div>`;
+    }
+    function openBook(colId) {
+      const c = state.collections.find(x => x.id===colId);
+      const mine = state.my_nfts.filter(n => n.collection===colId && !n.escrow);
+      $("book").innerHTML = `<h3>${c.name} instant book</h3>` + (c.book.length ? c.book.map(b => {
+        const can = mine.length && b.lender !== wallet;
+        return `<div class="offer"><b>${money(b.amount)}</b> · ${b.fee_pct}% · ${b.days}d · left ${money(b.remaining)}
+          ${can ? `<button class="primary" data-take="${b.id}">Take</button>` : `<span class="muted">Need an NFT in this set.</span>`}</div>`;
+      }).join("") : `<p class="muted">Empty book.</p>`);
+      setTab("instant");
+    }
+    function openTake(bidId, nftId) {
+      const bid = state.bids.find(b => b.id===bidId);
+      const c = state.collections.find(x => x.id===bid.collection);
+      const mine = state.my_nfts.filter(n => n.collection===bid.collection && !n.escrow);
+      if (!mine.length) { err("Need an NFT in this collection."); return; }
+      takeBid = bid;
+      $("takeTerms").textContent = `ON-CHAIN 1 HOUR · you get ${money(bid.amount)} now. Fee ${bid.fee_pct}%. Repay ${money(bid.amount*(1+bid.fee_pct/100))} within 1 hour or the lender keeps the NFT. You will approve this one token only (not all NFTs).`;
+      $("takeNft").innerHTML = mine.map(n => `<option value="${n.id}" ${n.id===nftId?"selected":""}>${n.name}</option>`).join("");
+      $("dlgTake").showModal();
+    }
+
+    $("lendForm").onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        const amount = $("lendAmt").value;
+        const total = $("lendTot").value;
+        const feePct = Number($("lendFee").value);
+        if (feePct > 10) throw new Error("Fee max 10%.");
+        const { c, addr } = await hpSigner();
+        if (!addr || !c) throw new Error("Deploy HourPawn first.");
+        const weiAmt = ethers.parseEther(String(amount));
+        const weiTot = ethers.parseEther(String(total));
+        if (weiTot < weiAmt) throw new Error("Total must cover one loan.");
+        const feeBps = Math.round(feePct * 100);
+        if (!confirm(`Lock ${total} ETH in HourPawn ${addr}?\nLoan per NFT: ${amount} ETH\nFee: ${feePct}%\nTerm: 1 hour\nChain: Robinhood 4663`)) return;
+        const tx = await c.postOffer(weiAmt, feeBps, { value: weiTot });
+        err("Posted. Waiting for tx " + tx.hash);
+        const rc = await tx.wait();
+        let oid = null;
+        for (const log of rc.logs) {
+          try {
+            const parsed = c.interface.parseLog(log);
+            if (parsed && parsed.name === "Posted") oid = parsed.args.id.toString();
+          } catch (e3) {}
+        }
+        await act({ action:"place_bid", collection:"ultra-rares", amount:Number(amount), total:Number(total), fee_pct:feePct, days:1, chain_id: oid });
+      } catch (e2) { err(e2.message || String(e2)); }
+    };
+    document.body.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t.dataset.tab) setTab(t.dataset.tab);
+      if (t.closest("tr")?.dataset.col) openBook(t.closest("tr").dataset.col);
+      if (t.dataset.take) openTake(t.dataset.take, t.dataset.nft);
+      if (t.dataset.man) {
+        manNft = state.nfts.find(n => n.id===t.dataset.man);
+        $("manNft").textContent = manNft.name + " · floor " + money(manNft.floor_eth);
+        $("manAmt").value = (Number(manNft.floor_eth) * 0.7).toFixed(5);
+        $("dlgMan").showModal();
+      }
+      if (t.dataset.cancel) act({ action:"cancel_bid", bid_id:t.dataset.cancel });
+      if (t.dataset.cxreq) act({ action:"cancel_request", request_id:t.dataset.cxreq });
+      if (t.dataset.cs) act({ action:"countersign", request_id:t.dataset.cs });
+      if (t.dataset.repay) onchainRepay(t.dataset.repay);
+      if (t.dataset.claim) onchainClaim(t.dataset.claim);
+    });
+    $("takeX").onclick = () => $("dlgTake").close();
+    $("takeGo").onclick = async () => {
+      try {
+        const nft = state.nfts.find(n => n.id === $("takeNft").value);
+        if (!nft) throw new Error("Pick an Ultra Rare.");
+        const { c, addr, signer } = await hpSigner();
+        if (!addr || !c) throw new Error("HourPawn not deployed.");
+        const nftC = new ethers.Contract(state.contracts.nft, [
+          "function approve(address to, uint256 tokenId)",
+          "function getApproved(uint256 tokenId) view returns (address)",
+        ], signer);
+        const repay = Number(takeBid.amount) * (1 + takeBid.fee_pct/100);
+        if (!confirm(`Take on-chain loan?\nNFT #${nft.token} → HourPawn for 1 hour\nYou receive ${takeBid.amount} ETH\nRepay ${repay} ETH in 1 hour or you lose the NFT\nApprove this token only.`)) return;
+        const approved = (await nftC.getApproved(nft.token)).toLowerCase();
+        if (approved !== addr.toLowerCase()) {
+          const a = await nftC.approve(addr, nft.token);
+          err("Approve tx " + a.hash);
+          await a.wait();
+        }
+        const oid = takeBid.chain_id || takeBid.id;
+        const tx = await c.take(oid, nft.token);
+        err("Take tx " + tx.hash);
+        const rc = await tx.wait();
+        let lid = null;
+        for (const log of rc.logs) {
+          try {
+            const parsed = c.interface.parseLog(log);
+            if (parsed && parsed.name === "Taken") lid = parsed.args.loanId.toString();
+          } catch (e3) {}
+        }
+        $("dlgTake").close();
+        await act({ action:"take", bid_id:takeBid.id, nft_id:nft.id, chain_loan_id: lid });
+      } catch (e2) { err(e2.message || String(e2)); }
+    };
+    $("manX").onclick = () => $("dlgMan").close();
+    $("manGo").onclick = () => { act({ action:"request_manual", nft_id:manNft.id, amount:+$("manAmt").value, fee_pct:+$("manFee").value, days:+$("manDays").value }); $("dlgMan").close(); setTab("manual"); };
+    $("connectBtn").onclick = $("connectBtn2").onclick = connectInjected;
+    $("walletX").onclick = () => $("dlgWallet").close();
+    const addRH = async () => {
+      if (!window.ethereum) { err("Need injected wallet."); return; }
+      try { await ensureChain(); err("Robinhood Chain ready."); }
+      catch (e) { err(e.message || String(e)); }
+    };
+    $("addChain").onclick = addRH;
+    const gate = document.getElementById("addChainGate");
+    if (gate) gate.onclick = addRH;
+    $("reset").onclick = () => act({ action:"reset" });
+    async function onchainRepay(id) {
+      try {
+        const { c, addr } = await hpSigner();
+        if (!c) throw new Error("HourPawn not deployed.");
+        const loan = (state.loans || []).find(L => L.id === id) || {};
+        const cid = loan.chain_id || id;
+        const due = await c.repayAmount(cid);
+        if (!confirm(`Repay ${ethers.formatEther(due)} ETH now to unlock your NFT?\nExact amount required.`)) return;
+        const tx = await c.repay(cid, { value: due });
+        err("Repay " + tx.hash);
+        await tx.wait();
+        await act({ action:"repay", loan_id:String(id) });
+      } catch (e2) { err(e2.message || String(e2)); }
+    }
+    async function onchainClaim(id) {
+      try {
+        const { c } = await hpSigner();
+        if (!c) throw new Error("HourPawn not deployed.");
+        if (!confirm("Claim NFT? Only works after 1 hour with no repay.")) return;
+        const loan = (state.loans || []).find(L => L.id === id) || {};
+        const cid = loan.chain_id || id;
+        const tx = await c.claim(cid);
+        err("Claim " + tx.hash);
+        await tx.wait();
+        await act({ action:"claim", loan_id:String(id) });
+      } catch (e2) { err(e2.message || String(e2)); }
+    }
+    $("deployHp").onclick = async () => {
+      try {
+        if (state.contracts && state.contracts.hourPawn) {
+          err("Already deployed: " + state.contracts.hourPawn);
+          return;
+        }
+        const { signer, art } = await hpSigner();
+        const factory = new ethers.ContractFactory(art.abi, art.bytecode, signer);
+        if (!confirm(`Deploy HourPawn for Ultra Rares ${art.collection} on Robinhood Chain?\nTerm 1 hour. No admin can steal locked NFTs.\nYou pay gas.`)) return;
+        const c = await factory.deploy(art.collection);
+        err("Deploy tx…");
+        await c.waitForDeployment();
+        const a = await c.getAddress();
+        await act({ action:"set_hourpawn", address:a });
+        err("HourPawn " + a);
+      } catch (e2) { err(e2.message || String(e2)); }
+    };
+    $("endSeason").onclick = () => { if (confirm("Settle this season and pay PAWN pro-rata?")) act({ action:"end_season" }); };
+    (async () => {
+      try {
+        if (wallet) await setWallet(wallet);
+        else { state = await api("/api/state"); showApp(false); }
+      } catch { wallet=""; localStorage.removeItem("pawn-wallet"); state = await api("/api/state"); showApp(false); }
+      setInterval(() => { if (state && state.wallet) api("/api/state").then(s => { state=s; render(); }).catch(()=>{}); }, 2000);
+    })();
+  </script>
+</body>
+</html>
