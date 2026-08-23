@@ -4,33 +4,23 @@
   coinupbtc.xyz — the lab.
   Pseudonymous: no real name, phone, employer, school, or street address.
 
-  Demos 01–03 are one HTML file each. 04 Host is HTML + sprites.
-  No backend, no framework, no build step, no tracking.
+  Every demo under /demos/ is a single self-contained file: no backend, no
+  framework, no build step, no tracking. View source on any of them.
 -->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The lab — coinupbtc.xyz</title>
-  <meta name="description" content="Lab demos you can poke in the browser: a mempool fee-band router, a 121 GB packer, a moiré bench, and Host the gorilla.">
+  <meta name="description" content="Four self-contained interactive demos from a local AI workshop: a mempool fee-band router, a speculative decoding model, a render-cost reproduction, and a moiré bench.">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0c0e13">
 
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="The lab">
   <meta property="og:title" content="The lab — coinupbtc.xyz">
-  <meta property="og:description" content="Lab demos you can poke: fee-band router, 121 GB packer, moiré bench, and Host.">
+  <meta property="og:description" content="Four things I measured or fixed, cut down until each fits in one file you can read.">
   <meta property="og:url" content="https://coinupbtc.xyz/">
-  <meta property="og:image" content="https://coinupbtc.xyz/assets/og-image.png">
-  <meta property="og:image:type" content="image/png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="The lab — fee-band router, 121 GB packer, moiré bench, Host. github.com/Coinupbtc · x.com/coinupbtc">
-  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:card" content="summary">
   <meta name="twitter:site" content="@coinupbtc">
-  <meta name="twitter:creator" content="@coinupbtc">
-  <meta name="twitter:image" content="https://coinupbtc.xyz/assets/og-image.png">
-  <meta name="twitter:image:alt" content="The lab — fee-band router, 121 GB packer, moiré bench, Host. github.com/Coinupbtc · x.com/coinupbtc">
-  <link rel="image_src" href="https://coinupbtc.xyz/assets/og-image.png">
 
   <link rel="canonical" href="https://coinupbtc.xyz/">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
@@ -40,6 +30,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <style>
+    /* Same tokens as coinupbtc.com so the two domains read as one brand. */
     :root {
       --ink: #0c0e13;
       --ink-2: #12151c;
@@ -56,8 +47,6 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html { scroll-padding-top: 4.5rem; }
-
     body {
       font-family: var(--font-body);
       background: var(--ink);
@@ -69,8 +58,6 @@
       overflow-x: hidden;
       position: relative;
       isolation: isolate;
-      padding-left: env(safe-area-inset-left, 0px);
-      padding-right: env(safe-area-inset-right, 0px);
     }
 
     a { color: inherit; text-underline-offset: 4px; transition: color .18s ease; }
@@ -83,6 +70,7 @@
     }
     .skip-link:focus { left: .5rem; top: .5rem; }
 
+    /* Coded motif — two interfering ring sets, same as the .com hero */
     .moire {
       position: fixed;
       inset: -25%;
@@ -109,29 +97,19 @@
     .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
 
     .top {
-      position: sticky; top: 0; z-index: 20;
-      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
       font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute);
-      padding: max(1rem, env(safe-area-inset-top, 0px)) 0 1rem;
-      background: color-mix(in srgb, var(--ink) 88%, transparent);
-      -webkit-backdrop-filter: blur(12px);
-      backdrop-filter: blur(12px);
+      padding: clamp(1.15rem, 3vw, 2.1rem) 0;
     }
     .top strong { color: var(--paper); font-weight: 500; letter-spacing: .1em; }
-    .top nav { display: flex; flex-wrap: wrap; gap: .2rem .15rem; }
-    .top nav a {
-      min-height: 44px; display: inline-flex; align-items: center;
-      padding: 0 .7rem; text-decoration: none;
-      border-bottom: 2px solid transparent;
-    }
-    .top nav a:hover { border-bottom-color: var(--acid); }
+    .top a { text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: .1rem; }
 
-    header.hero { padding-block: clamp(2rem, 8vw, 5rem) clamp(1.5rem, 5vw, 2.8rem); }
+    header.hero { padding-block: clamp(2.5rem, 9vw, 6rem) clamp(2rem, 6vw, 3.5rem); }
 
     h1 {
       font-family: var(--font-display);
       font-weight: 700;
-      font-size: clamp(2.4rem, 11vw, 6.5rem);
+      font-size: clamp(2.6rem, 11vw, 6.5rem);
       line-height: .88;
       letter-spacing: -.035em;
       position: relative;
@@ -151,30 +129,16 @@
     }
     .lede b { color: var(--paper); font-weight: 500; }
 
-    .use {
-      margin-top: 1.4rem;
-      max-width: 54ch;
-      border-left: 2px solid var(--acid);
-      padding: .15rem 0 .15rem 1rem;
-      font-size: .84rem;
-      line-height: 1.65;
-      color: var(--paper);
-    }
-    .use b { color: var(--acid); font-weight: 500; }
-
     main { flex: 1; }
 
     .grid {
       list-style: none;
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr));
       gap: 1px;
       background: var(--line-soft);
       border: 1px solid var(--line-soft);
       margin-bottom: clamp(3rem, 8vw, 5rem);
-    }
-    @media (min-width: 720px) {
-      .grid { grid-template-columns: 1fr 1fr; }
     }
 
     .card { background: var(--ink); position: relative; }
@@ -185,7 +149,6 @@
       height: 100%;
       padding: clamp(1.5rem, 3.5vw, 2.2rem);
       text-decoration: none;
-      min-height: 44px;
       transition: background .2s ease;
     }
     .card a:hover { background: var(--ink-2); color: inherit; }
@@ -203,12 +166,6 @@
       transition: color .18s ease;
     }
     .card .what { color: var(--mute); font-size: .84rem; line-height: 1.65; flex: 1; }
-    .card .do {
-      font-size: .78rem;
-      color: var(--paper);
-      line-height: 1.5;
-    }
-    .card .do b { color: var(--acid); font-weight: 500; }
     .card .tag {
       font-size: .7rem;
       color: var(--acid);
@@ -216,9 +173,6 @@
       border-top: 1px solid var(--line-soft);
       padding-top: .75rem;
       margin-top: .3rem;
-      display: flex;
-      justify-content: space-between;
-      gap: .75rem;
     }
 
     .note {
@@ -232,19 +186,13 @@
 
     footer {
       border-top: 1px solid var(--line-soft);
-      padding: 1.8rem 0 max(1.8rem, env(safe-area-inset-bottom, 0px));
+      padding: 1.8rem 0;
       font-size: .68rem;
       letter-spacing: .1em;
       text-transform: uppercase;
       color: var(--dim);
     }
     footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
-    footer a { min-height: 44px; display: inline-flex; align-items: center; }
-
-    @media (max-width: 480px) {
-      .grid { grid-template-columns: 1fr; }
-      .top { flex-wrap: wrap; }
-    }
 
     @media (prefers-reduced-motion: reduce) {
       .moire::after { animation: none !important; }
@@ -257,83 +205,75 @@
   <div class="moire" aria-hidden="true"></div>
 
   <div class="wrap top">
-    <strong>The lab</strong>
-    <nav aria-label="Site">
-      <a href="#demos">Demos</a>
-      <a href="/training.html">Train your team</a>
-      <a href="https://coinupbtc.com/">Hub</a>
-      <a href="https://github.com/Coinupbtc">GitHub</a>
-    </nav>
+    <strong>Coinupbtc</strong>
+    <a href="https://coinupbtc.com/">coinupbtc.com →</a>
   </div>
 
   <header class="hero wrap">
     <h1>The lab</h1>
     <p class="lede">
-      Three mechanisms I measured on my own hardware, cut down until they fit in
-      <b>a file you can read</b> — plus Host, a slash-command gorilla.
-      No backend, no account, no tracking. The numbers on 02 are from this box, not a spec sheet.
-    </p>
-    <p class="use">
-      <b>How to use it:</b> pick a card. Drag the sliders. Read the verdict.
-      View source if you want the mechanism, not a screenshot of it.
+      Four things I measured or fixed on my own hardware, cut down until each one fits in
+      <b>a single file you can read</b>. No backend, no framework, no build step, no tracking —
+      every demo runs entirely in your browser, and the last one measures <i>your</i> machine,
+      not mine.
     </p>
   </header>
 
   <main id="main" class="wrap">
-    <p class="note" id="demos">
+    <p class="note">
       These are not screenshots of tools. They are the actual mechanisms, reimplemented small:
-      the fee-band routing behind a mempool visualiser, the 121&nbsp;GB-per-Spark memory budget
-      that decides what can sit at once, the interference pattern used as the motif on both sites,
-      and Host — an original gorilla you slash-command.
+      the fee-band routing behind a mempool visualiser, the arithmetic that decides how many
+      tokens a draft model should guess, the render bug that made a click take
+      <strong>13 seconds</strong>, and the interference pattern used as the motif on both sites.
     </p>
 
     <ul class="grid">
       <li class="card">
         <a href="demos/mempool.html">
-          <span class="idx">01 · ~1 min</span>
+          <span class="idx">01</span>
           <span class="name">Fee-band router</span>
           <span class="what">
             Transactions arrive, get sorted into fee bands, and race for space in the next
-            few blocks.
+            few blocks. Set your own fee rate and watch which block — if any — takes you.
           </span>
-          <span class="do">Drag <b>your fee rate</b>. Watch which block takes you — or climbs past you.</span>
-          <span class="tag"><span>canvas · simulated</span><span>Open →</span></span>
+          <span class="tag">canvas · simulated mempool</span>
         </a>
       </li>
 
       <li class="card">
-        <a href="demos/memory-pack.html">
-          <span class="idx">02 · ~1 min</span>
-          <span class="name">121 GB packer</span>
+        <a href="demos/spec-decode.html">
+          <span class="idx">02</span>
+          <span class="name">Speculative decoding</span>
           <span class="what">
-            Each Spark is a 121 GB tank. TP2 fills two of them. A third is a spare.
+            A small model guesses ahead, a big model checks its work. Drag the draft length
+            and the acceptance rate to find where the speedup peaks — and where guessing
+            more starts costing you.
           </span>
-          <span class="do">Pick <b>1 / 2 / 3 Sparks</b>. Tap a model. Watch the tanks fill.</span>
-          <span class="tag"><span>TP1 · TP2 · measured</span><span>Open →</span></span>
+          <span class="tag">the curve has a maximum</span>
+        </a>
+      </li>
+
+      <li class="card">
+        <a href="demos/render-cost.html">
+          <span class="idx">03</span>
+          <span class="name">13s → 7.5ms</span>
+          <span class="what">
+            A real render bug, reproduced. 516 rows, one click, two implementations. Your
+            browser times both and prints the gap — no numbers of mine involved.
+          </span>
+          <span class="tag">measures your machine</span>
         </a>
       </li>
 
       <li class="card">
         <a href="demos/moire.html">
-          <span class="idx">03 · poke around</span>
+          <span class="idx">04</span>
           <span class="name">Moiré bench</span>
           <span class="what">
-            Two grids, slightly disagreeing. The third pattern is not in either layer.
+            Two grids, slightly disagreeing. Rotate and detune them to raise interference
+            patterns out of nothing — including the exact motif behind the header above.
           </span>
-          <span class="do">Nudge <b>Layer B spacing</b> one notch. The bands you see are the disagreement.</span>
-          <span class="tag"><span>canvas · site motif</span><span>Open →</span></span>
-        </a>
-      </li>
-
-      <li class="card">
-        <a href="demos/host/">
-          <span class="idx">04 · poke around</span>
-          <span class="name">Host</span>
-          <span class="what">
-            Original gorilla with a frohawk. 4-dir sprites, slash emotes, no backend.
-          </span>
-          <span class="do">Tap <b>/twirl</b>. Then /walk /roar. He does not morph.</span>
-          <span class="tag"><span>sprites · slash cmds</span><span>Open →</span></span>
+          <span class="tag">canvas · pure geometry</span>
         </a>
       </li>
     </ul>
@@ -342,7 +282,7 @@
   <footer>
     <div class="wrap">
       <span>Pseudonymous</span>
-      <span><a href="https://coinupbtc.com/">coinupbtc.com</a> · <a href="https://github.com/Coinupbtc">GitHub</a> · <a href="https://x.com/coinupbtc">X</a></span>
+      <span><a href="https://github.com/Coinupbtc">GitHub</a> · <a href="https://x.com/coinupbtc">X</a></span>
       <span>coinupbtc.xyz</span>
     </div>
   </footer>
