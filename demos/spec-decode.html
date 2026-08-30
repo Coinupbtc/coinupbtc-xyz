@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<!--
+  Speculative decoding — where the speedup peaks, and why more guessing loses.
+  Self-contained: no backend, no framework, no build step, no tracking.
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Speculative decoding — the lab</title>
+  <meta name="description" content="A small model guesses ahead and a big model checks its work. Interactive model of where the speedup peaks and where guessing more starts costing you.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0e13">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c; --ink-3: #191d26;
+      --paper: #ece8df; --acid: #c8f54a; --hot: #ff6b5e; --cool: #63b6ff;
+      --mute: #8b9287; --dim: #5f6660;
+      --line: rgba(236,232,223,.14); --line-soft: rgba(236,232,223,.07);
+      --font-display: Fraunces, Georgia, serif;
+      --font-body: "IBM Plex Mono", ui-monospace, monospace;
+      --pad: clamp(1.15rem, 4vw, 3.5rem);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); background: var(--ink); color: var(--paper);
+      line-height: 1.55; min-height: 100svh; display: flex; flex-direction: column;
+    }
+    a { color: inherit; text-underline-offset: 4px; transition: color .18s ease; }
+    a:hover { color: var(--acid); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+
+    .top {
+      display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute);
+      padding: 1.4rem 0; border-bottom: 1px solid var(--line-soft);
+    }
+    .top a { text-decoration: none; }
+
+    header { padding-block: clamp(2.2rem, 6vw, 3.6rem) 1.6rem; }
+    .idx { font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+    h1 {
+      font-family: var(--font-display); font-weight: 700; letter-spacing: -.03em;
+      font-size: clamp(2rem, 6.5vw, 3.6rem); line-height: 1; margin-top: .5rem;
+    }
+    .lede { margin-top: 1.2rem; max-width: 68ch; color: #d6d3ca; font-size: .92rem; line-height: 1.75; }
+    .lede b { color: var(--paper); font-weight: 500; }
+
+    main { flex: 1; padding-bottom: clamp(3rem, 7vw, 5rem); }
+
+    .panel {
+      border: 1px solid var(--line-soft); background: var(--ink-2);
+      padding: clamp(1.1rem, 3vw, 1.7rem); margin-top: 1.6rem;
+    }
+
+    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px,100%),1fr)); gap: 1.4rem 2rem; }
+    .ctl { display: flex; flex-direction: column; gap: .45rem; }
+    .ctl label { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+    .ctl .val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .ctl .val span { color: var(--acid); font-size: .62em; }
+    .ctl .hint { font-size: .7rem; color: var(--dim); line-height: 1.5; }
+    input[type=range] { width: 100%; accent-color: var(--acid); cursor: pointer; }
+
+    .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px,100%),1fr)); gap: 1px; background: var(--line-soft); margin-top: 1.6rem; border: 1px solid var(--line-soft); }
+    .res { background: var(--ink); padding: 1.2rem; }
+    .res dt { font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute); }
+    .res dd { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.5rem,4vw,2.1rem); line-height: 1.05; margin-top: .5rem; letter-spacing: -.02em; }
+    .res .unit { font-size: .55em; color: var(--mute); }
+    .res dd.up { color: var(--acid); }
+    .res dd.down { color: var(--hot); }
+    .res p { font-size: .7rem; color: var(--dim); margin-top: .45rem; line-height: 1.5; }
+
+    .chart-head {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
+      gap: .8rem; margin-top: 1.8rem; margin-bottom: .7rem;
+      font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute);
+    }
+    .legend { display: flex; gap: 1rem; text-transform: none; letter-spacing: .04em; }
+    .legend i { display: inline-block; width: .75rem; height: .75rem; margin-right: .35rem; vertical-align: -1px; }
+    canvas { width: 100%; height: auto; display: block; background: var(--ink); border: 1px solid var(--line-soft); }
+
+    .strip-head {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      gap: .8rem; margin-top: 1.8rem; margin-bottom: .7rem;
+      font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute);
+    }
+    .btn {
+      font: inherit; font-size: .78rem; background: none; color: var(--paper);
+      border: 1px solid var(--line); padding: .45rem .9rem; cursor: pointer;
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+    .btn:hover { border-color: var(--acid); color: var(--acid); }
+
+    .strip {
+      border: 1px solid var(--line-soft); background: var(--ink); padding: 1rem;
+      display: flex; flex-wrap: wrap; gap: .3rem; min-height: 7.5rem; align-content: flex-start;
+    }
+    .tok {
+      font-size: .72rem; padding: .28rem .5rem; border: 1px solid var(--line-soft);
+      color: var(--mute); white-space: nowrap;
+    }
+    .tok.ok   { border-color: rgba(200,245,74,.55); color: var(--acid); background: rgba(200,245,74,.09); }
+    .tok.no   { border-color: rgba(255,107,94,.5);  color: var(--hot);  background: rgba(255,107,94,.08); text-decoration: line-through; }
+    .tok.free { border-color: rgba(99,182,255,.5);  color: var(--cool); background: rgba(99,182,255,.08); }
+    .tok.pending { opacity: .4; }
+
+    .cycle-tag {
+      width: 100%; font-size: .64rem; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--dim); margin-top: .5rem; border-top: 1px solid var(--line-soft); padding-top: .5rem;
+    }
+    .cycle-tag:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+
+    .story { margin-top: clamp(2.4rem, 6vw, 3.6rem); max-width: 72ch; }
+    .story h2 {
+      font-family: var(--font-display); font-weight: 700; letter-spacing: -.02em;
+      font-size: clamp(1.3rem, 3.4vw, 1.9rem); margin-bottom: .9rem;
+    }
+    .story p { color: var(--mute); font-size: .87rem; line-height: 1.8; margin-bottom: 1rem; }
+    .story strong { color: var(--paper); font-weight: 500; }
+    .story code { background: var(--ink-2); border: 1px solid var(--line-soft); padding: .12rem .4rem; font-size: .85em; color: var(--acid); }
+    .callout { border-left: 2px solid var(--acid); padding: .2rem 0 .2rem 1.1rem; margin: 1.4rem 0; color: #d6d3ca; font-size: .87rem; line-height: 1.8; }
+    .formula {
+      background: var(--ink-2); border: 1px solid var(--line-soft); padding: 1rem 1.1rem;
+      margin: 1.2rem 0; font-size: .82rem; color: #d6d3ca; overflow-x: auto; line-height: 1.9;
+    }
+    .formula b { color: var(--acid); font-weight: 500; }
+
+    footer {
+      border-top: 1px solid var(--line-soft); padding: 1.7rem 0;
+      font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+    }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap top">
+    <a href="../index.html">← the lab</a>
+    <span>coinupbtc.xyz</span>
+  </div>
+
+  <header class="wrap">
+    <p class="idx">Demo 02</p>
+    <h1>Speculative decoding</h1>
+    <p class="lede">
+      A big model is slow because every token costs a full forward pass. So let a small model
+      <b>guess several tokens ahead</b>, then have the big one check the whole guess in a single
+      pass. Everything it got right is free. Everything after the first mistake is thrown away.
+      The interesting part: <b>guessing further ahead does not keep helping.</b>
+    </p>
+  </header>
+
+  <main class="wrap">
+    <div class="panel">
+      <div class="controls">
+        <div class="ctl">
+          <label for="k">Draft length — tokens guessed per cycle</label>
+          <div class="val" id="kVal">6</div>
+          <input type="range" id="k" min="1" max="16" step="1" value="6">
+          <p class="hint">How far the small model runs ahead before the big one checks.</p>
+        </div>
+        <div class="ctl">
+          <label for="p">Acceptance rate</label>
+          <div class="val" id="pVal">0.75</div>
+          <input type="range" id="p" min="5" max="98" step="1" value="75">
+          <p class="hint">Chance the big model agrees with any single guessed token.</p>
+        </div>
+        <div class="ctl">
+          <label for="c">Draft cost</label>
+          <div class="val" id="cVal">0.15<span>×</span></div>
+          <input type="range" id="c" min="2" max="50" step="1" value="15">
+          <p class="hint">Cost of one draft step relative to one big-model pass.</p>
+        </div>
+      </div>
+
+      <dl class="results">
+        <div class="res">
+          <dt>Tokens per cycle</dt>
+          <dd id="rTokens">—</dd>
+          <p>Expected accepted, plus the one the big model contributes free.</p>
+        </div>
+        <div class="res">
+          <dt>Cost per cycle</dt>
+          <dd id="rCost">—<span class="unit"> passes</span></dd>
+          <p>k draft steps plus one verification pass.</p>
+        </div>
+        <div class="res">
+          <dt>Speedup</dt>
+          <dd id="rSpeed" class="up">—<span class="unit">×</span></dd>
+          <p id="rSpeedNote">Against decoding one token at a time.</p>
+        </div>
+        <div class="res">
+          <dt>Best draft length</dt>
+          <dd id="rBest">—</dd>
+          <p id="rBestNote">At this acceptance rate and draft cost.</p>
+        </div>
+      </dl>
+
+      <div class="chart-head">
+        <span>Speedup vs draft length</span>
+        <span class="legend">
+          <span><i style="background:var(--acid)"></i>this acceptance rate</span>
+          <span><i style="background:var(--dim)"></i>±0.10</span>
+          <span><i style="background:var(--hot)"></i>break-even</span>
+        </span>
+      </div>
+      <canvas id="chart" width="1160" height="420" role="img"
+              aria-label="Speedup plotted against draft length, showing a peak then decline"></canvas>
+
+      <div class="strip-head">
+        <span>One run, token by token</span>
+        <button class="btn" id="roll">Roll again</button>
+      </div>
+      <div class="strip" id="strip" aria-live="polite"></div>
+    </div>
+
+    <section class="story">
+      <h2>Why the curve turns over</h2>
+      <p>
+        Each cycle costs <code>k</code> cheap draft steps plus one expensive verification pass.
+        It returns however many leading guesses survive. Because a single wrong token invalidates
+        everything after it, the expected yield is a geometric series — it <strong>saturates</strong>.
+        Doubling the draft length does not double the tokens you keep.
+      </p>
+      <div class="formula">
+        expected tokens per cycle &nbsp;=&nbsp; <b>(1 − p<sup>k+1</sup>) / (1 − p)</b><br>
+        cost per cycle &nbsp;=&nbsp; <b>k·c + 1</b><br>
+        speedup &nbsp;=&nbsp; <b>tokens / cost</b>
+      </div>
+      <p>
+        The numerator flattens out; the denominator keeps climbing in a straight line. So there is
+        always a <strong>peak</strong>, and past it every extra guessed token is pure overhead. Drag
+        <strong>acceptance</strong> up and watch the peak slide right — the more often the draft is
+        correct, the further ahead it is worth running.
+      </p>
+      <div class="callout">
+        <strong>Acceptance rate is not the target.</strong> When this was tuned on real prompts, the
+        configuration with the <em>best</em> acceptance rate delivered the <em>worst</em> throughput.
+        Acceptance is an input to the arithmetic above, not the thing being maximised. It is easy to
+        raise it by being more conservative, and be slower for it.
+      </div>
+      <p>
+        <strong>What this model leaves out.</strong> It assumes each token is accepted independently
+        with the same probability, that draft cost is linear in <code>k</code>, and that verification
+        costs exactly one pass regardless of <code>k</code>. Real systems violate all three — acceptance
+        is bursty, batching changes everything, and a longer draft makes the verify pass slightly more
+        expensive. The shape holds; treat the absolute numbers as the shape of the trade-off rather
+        than a prediction.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><a href="../index.html">← the lab</a></span>
+      <span><a href="https://coinupbtc.com/">coinupbtc.com</a></span>
+      <span>Runs entirely in your browser</span>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var kIn = document.getElementById("k");
+    var pIn = document.getElementById("p");
+    var cIn = document.getElementById("c");
+    var canvas = document.getElementById("chart");
+    var ctx = canvas.getContext("2d");
+    var strip = document.getElementById("strip");
+
+    var css = getComputedStyle(document.documentElement);
+    var ACID = css.getPropertyValue("--acid").trim() || "#c8f54a";
+    var HOT  = css.getPropertyValue("--hot").trim()  || "#ff6b5e";
+    var DIM  = css.getPropertyValue("--dim").trim()  || "#5f6660";
+    var MUTE = css.getPropertyValue("--mute").trim() || "#8b9287";
+
+    var KMAX = 16;
+
+    /* Expected accepted tokens per cycle, including the free bonus token the
+       target model contributes when it verifies. Geometric, so it saturates. */
+    function tokens(k, p) {
+      if (p >= 0.999999) return k + 1;
+      return (1 - Math.pow(p, k + 1)) / (1 - p);
+    }
+    function cost(k, c) { return k * c + 1; }
+    function speedup(k, p, c) { return tokens(k, p) / cost(k, c); }
+
+    function bestK(p, c) {
+      var best = 1, bv = -Infinity;
+      for (var k = 1; k <= KMAX; k++) {
+        var v = speedup(k, p, c);
+        if (v > bv) { bv = v; best = k; }
+      }
+      return best;
+    }
+
+    function read() {
+      return {
+        k: Number(kIn.value),
+        p: Number(pIn.value) / 100,
+        c: Number(cIn.value) / 100
+      };
+    }
+
+    function drawChart(s) {
+      var W = canvas.width, H = canvas.height;
+      var padL = 62, padR = 22, padT = 22, padB = 46;
+      var plotW = W - padL - padR, plotH = H - padT - padB;
+
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = "#0c0e13";
+      ctx.fillRect(0, 0, W, H);
+
+      // y range: cover the curves plus headroom, never below 1.0 (break-even)
+      var maxY = 1.2;
+      for (var k = 1; k <= KMAX; k++) {
+        maxY = Math.max(maxY, speedup(k, Math.min(0.98, s.p + 0.10), s.c));
+        maxY = Math.max(maxY, speedup(k, s.p, s.c));
+      }
+      maxY = Math.ceil(maxY * 10) / 10 + 0.1;
+
+      var X = function (k) { return padL + ((k - 1) / (KMAX - 1)) * plotW; };
+      var Y = function (v) { return padT + plotH - (v / maxY) * plotH; };
+
+      // grid
+      ctx.strokeStyle = "rgba(236,232,223,.07)";
+      ctx.fillStyle = MUTE;
+      ctx.lineWidth = 1;
+      ctx.font = "12px 'IBM Plex Mono', monospace";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      var steps = 5;
+      for (var i = 0; i <= steps; i++) {
+        var v = (maxY / steps) * i;
+        var y = Y(v);
+        ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+        ctx.fillText(v.toFixed(1) + "×", padL - 10, y);
+      }
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      for (var kk = 1; kk <= KMAX; kk++) {
+        if (kk % 2 === 1 || kk === KMAX) ctx.fillText(String(kk), X(kk), H - padB + 12);
+      }
+      ctx.fillStyle = DIM;
+      ctx.fillText("draft length k", padL + plotW / 2, H - 16);
+
+      // break-even line at 1.0
+      ctx.strokeStyle = HOT;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(padL, Y(1)); ctx.lineTo(W - padR, Y(1)); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // neighbour curves at +/- 0.10 acceptance
+      [-0.10, 0.10].forEach(function (d) {
+        var pp = Math.min(0.98, Math.max(0.05, s.p + d));
+        ctx.strokeStyle = "rgba(139,146,135,.45)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (var k2 = 1; k2 <= KMAX; k2++) {
+          var yy = Y(speedup(k2, pp, s.c));
+          if (k2 === 1) ctx.moveTo(X(k2), yy); else ctx.lineTo(X(k2), yy);
+        }
+        ctx.stroke();
+      });
+
+      // main curve
+      ctx.strokeStyle = ACID;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (var k3 = 1; k3 <= KMAX; k3++) {
+        var y3 = Y(speedup(k3, s.p, s.c));
+        if (k3 === 1) ctx.moveTo(X(k3), y3); else ctx.lineTo(X(k3), y3);
+      }
+      ctx.stroke();
+
+      // peak marker
+      var bk = bestK(s.p, s.c);
+      ctx.fillStyle = ACID;
+      ctx.beginPath(); ctx.arc(X(bk), Y(speedup(bk, s.p, s.c)), 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "rgba(200,245,74,.35)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(X(bk), Y(speedup(bk, s.p, s.c))); ctx.lineTo(X(bk), padT + plotH); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // current selection
+      ctx.fillStyle = "#ece8df";
+      ctx.beginPath(); ctx.arc(X(s.k), Y(speedup(s.k, s.p, s.c)), 3.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    /* One sampled run: draft guesses k tokens, target accepts a prefix. */
+    var WORDS = ["the", "model", "writes", "a", "token", "then", "checks", "it", "again",
+                 "because", "guessing", "is", "cheap", "and", "verifying", "is", "not",
+                 "which", "makes", "the", "whole", "thing", "worth", "doing"];
+
+    function roll() {
+      var s = read();
+      strip.textContent = "";
+      var produced = 0, cycles = 0, wi = 0;
+
+      while (produced < 26 && cycles < 8) {
+        cycles++;
+        var tag = document.createElement("div");
+        tag.className = "cycle-tag";
+
+        var accepted = 0;
+        while (accepted < s.k && Math.random() < s.p) accepted++;
+
+        tag.textContent = "cycle " + cycles + " — drafted " + s.k +
+                          ", kept " + accepted + " + 1 free";
+        strip.appendChild(tag);
+
+        for (var i = 0; i < s.k; i++) {
+          var t = document.createElement("span");
+          t.className = "tok " + (i < accepted ? "ok" : "no");
+          t.textContent = WORDS[(wi + i) % WORDS.length];
+          strip.appendChild(t);
+        }
+        var bonus = document.createElement("span");
+        bonus.className = "tok free";
+        bonus.textContent = WORDS[(wi + accepted) % WORDS.length];
+        strip.appendChild(bonus);
+
+        wi += accepted + 1;
+        produced += accepted + 1;
+      }
+    }
+
+    function update() {
+      var s = read();
+      document.getElementById("kVal").textContent = s.k;
+      document.getElementById("pVal").textContent = s.p.toFixed(2);
+      document.getElementById("cVal").innerHTML = s.c.toFixed(2) + "<span>×</span>";
+
+      var tk = tokens(s.k, s.p), cs = cost(s.k, s.c), sp = tk / cs;
+      document.getElementById("rTokens").textContent = tk.toFixed(2);
+      document.getElementById("rCost").innerHTML = cs.toFixed(2) + '<span class="unit"> passes</span>';
+
+      var spEl = document.getElementById("rSpeed");
+      spEl.innerHTML = sp.toFixed(2) + '<span class="unit">×</span>';
+      spEl.className = sp >= 1 ? "up" : "down";
+      document.getElementById("rSpeedNote").textContent =
+        sp >= 1 ? "Against decoding one token at a time."
+                : "Below 1× — speculating is costing you here.";
+
+      var bk = bestK(s.p, s.c);
+      document.getElementById("rBest").textContent = "k = " + bk;
+      document.getElementById("rBestNote").textContent =
+        s.k === bk ? "You are on the peak."
+                   : "At k = " + s.k + " you give up " +
+                     ((1 - sp / speedup(bk, s.p, s.c)) * 100).toFixed(1) + "% of the peak.";
+
+      drawChart(s);
+    }
+
+    [kIn, pIn, cIn].forEach(function (el) {
+      el.addEventListener("input", function () { update(); });
+      el.addEventListener("change", roll);
+    });
+    document.getElementById("roll").addEventListener("click", roll);
+
+    update();
+    roll();
+  })();
+  </script>
+</body>
+</html>
