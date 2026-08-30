@@ -11,25 +11,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>The lab — coinupbtc.xyz</title>
-  <meta name="description" content="Lab demos you can poke in the browser: a mempool fee-band router, a 121 GB packer, a moiré bench, and Host the gorilla.">
+  <meta name="description" content="Lab demos you can poke in the browser: a mempool fee-band router, speculative decoding, a render-cost timer, a 121 GB packer, a moiré bench, and Host the gorilla.">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0c0e13">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="The lab">
   <meta property="og:title" content="The lab — coinupbtc.xyz">
-  <meta property="og:description" content="Lab demos you can poke: fee-band router, 121 GB packer, moiré bench, and Host.">
+  <meta property="og:description" content="Lab demos you can poke: fee-band router, speculative decoding, render-cost timer, 121 GB packer, moiré bench, and Host.">
   <meta property="og:url" content="https://coinupbtc.xyz/">
   <meta property="og:image" content="https://coinupbtc.xyz/assets/og-image.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="The lab — fee-band router, 121 GB packer, moiré bench, Host. github.com/Coinupbtc · x.com/coinupbtc">
+  <meta property="og:image:alt" content="The lab — six pokes: fee router, spec-decode, render-cost, 121 GB packer, moiré, Host. github.com/Coinupbtc · x.com/coinupbtc">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@coinupbtc">
   <meta name="twitter:creator" content="@coinupbtc">
   <meta name="twitter:image" content="https://coinupbtc.xyz/assets/og-image.png">
-  <meta name="twitter:image:alt" content="The lab — fee-band router, 121 GB packer, moiré bench, Host. github.com/Coinupbtc · x.com/coinupbtc">
+  <meta name="twitter:image:alt" content="The lab — six pokes: fee router, spec-decode, render-cost, 121 GB packer, moiré, Host. github.com/Coinupbtc · x.com/coinupbtc">
   <link rel="image_src" href="https://coinupbtc.xyz/assets/og-image.png">
 
   <link rel="canonical" href="https://coinupbtc.xyz/">
@@ -270,9 +270,9 @@
   <header class="hero wrap">
     <h1>The lab</h1>
     <p class="lede">
-      Three mechanisms I measured on my own hardware, cut down until they fit in
+      Five mechanisms I measured on my own hardware, cut down until they fit in
       <b>a file you can read</b> — plus Host, a slash-command gorilla.
-      No backend, no account, no tracking. The numbers on 02 are from this box, not a spec sheet.
+      No backend, no account, no tracking. The numbers on 04 are from this box, not a spec sheet.
     </p>
     <p class="use">
       <b>How to use it:</b> pick a card. Drag the sliders. Read the verdict.
@@ -283,9 +283,10 @@
   <main id="main" class="wrap">
     <p class="note" id="demos">
       These are not screenshots of tools. They are the actual mechanisms, reimplemented small:
-      the fee-band routing behind a mempool visualiser, the 121&nbsp;GB-per-Spark memory budget
-      that decides what can sit at once, the interference pattern used as the motif on both sites,
-      and Host — an original gorilla you slash-command.
+      the fee-band routing behind a mempool visualiser, speculative decoding and the cost of a
+      forced reflow, the 121&nbsp;GB-per-Spark memory budget that decides what can sit at once,
+      the interference pattern used as the motif on both sites, and Host — an original gorilla
+      you slash-command.
     </p>
 
     <ul class="grid">
@@ -303,8 +304,32 @@
       </li>
 
       <li class="card">
+        <a href="demos/spec-decode.html">
+          <span class="idx">02 · ~2 min</span>
+          <span class="name">Speculative decoding</span>
+          <span class="what">
+            A small model guesses ahead; the big one checks the whole guess in one pass.
+          </span>
+          <span class="do">Drag <b>draft length k</b>. Watch the speedup peak — and fall past it.</span>
+          <span class="tag"><span>canvas · measured shape</span><span>Open →</span></span>
+        </a>
+      </li>
+
+      <li class="card">
+        <a href="demos/render-cost.html">
+          <span class="idx">03 · ~2 min</span>
+          <span class="name">13s → 7.5ms</span>
+          <span class="what">
+            A real O(N) render bug, reproduced: one click, two implementations, timed live.
+          </span>
+          <span class="do">Drag <b>rows</b>. Your browser does the timing.</span>
+          <span class="tag"><span>DOM · your machine times it</span><span>Open →</span></span>
+        </a>
+      </li>
+
+      <li class="card">
         <a href="demos/memory-pack.html">
-          <span class="idx">02 · ~1 min</span>
+          <span class="idx">04 · ~1 min</span>
           <span class="name">121 GB packer</span>
           <span class="what">
             Each Spark is a 121 GB tank. TP2 fills two of them. A third is a spare.
@@ -316,7 +341,7 @@
 
       <li class="card">
         <a href="demos/moire.html">
-          <span class="idx">03 · poke around</span>
+          <span class="idx">05 · poke around</span>
           <span class="name">Moiré bench</span>
           <span class="what">
             Two grids, slightly disagreeing. The third pattern is not in either layer.
@@ -328,7 +353,7 @@
 
       <li class="card">
         <a href="demos/host/">
-          <span class="idx">04 · poke around</span>
+          <span class="idx">06 · poke around</span>
           <span class="name">Host</span>
           <span class="what">
             Original gorilla with a frohawk. 4-dir sprites, slash emotes, no backend.

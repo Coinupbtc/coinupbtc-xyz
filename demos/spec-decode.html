@@ -6,7 +6,7 @@
 -->
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Speculative decoding — the lab</title>
   <meta name="description" content="A small model guesses ahead and a big model checks its work. Interactive model of where the speedup peaks and where guessing more starts costing you.">
   <meta name="color-scheme" content="dark">
@@ -136,12 +136,44 @@
       font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
     }
     footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
+
+    /* usage chrome — sticky bar, touch targets, prev/next hops */
+    html { scroll-padding-top: 4.5rem; }
+    body {
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+    .top {
+      position: sticky; top: 0; z-index: 30;
+      background: color-mix(in srgb, var(--ink) 92%, transparent);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      padding-top: max(1rem, env(safe-area-inset-top, 0px));
+      padding-bottom: 1rem;
+      align-items: center;
+    }
+    .top a {
+      min-height: 44px; display: inline-flex; align-items: center;
+      text-decoration: none;
+    }
+    .demo-hop {
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem;
+      margin-top: 2rem; padding-top: 1.2rem; border-top: 1px solid var(--line-soft);
+    }
+    .demo-hop a {
+      min-height: 44px; display: inline-flex; align-items: center;
+      text-decoration: none; border-bottom: 1px solid var(--line);
+      font-size: .78rem;
+    }
+    .btn { min-height: 44px; min-width: 44px; }
+    input[type=range] { min-height: 44px; touch-action: manipulation; }
+    footer { padding-bottom: max(1.7rem, env(safe-area-inset-bottom, 0px)); }
   </style>
 </head>
 <body>
   <div class="wrap top">
     <a href="../index.html">← the lab</a>
-    <span>coinupbtc.xyz</span>
+    <a href="https://coinupbtc.com/">Hub</a>
   </div>
 
   <header class="wrap">
@@ -253,6 +285,10 @@
         than a prediction.
       </p>
     </section>
+    <nav class="demo-hop" aria-label="Next demo">
+      <a href="mempool.html">← 01 Fee-band router</a>
+      <a href="render-cost.html">03 13s → 7.5ms →</a>
+    </nav>
   </main>
 
   <footer>
