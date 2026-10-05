@@ -6,7 +6,7 @@
 
 | | |
 |---|---|
-| **What it is** | Six interactive demos you poke in the browser — measured mechanisms, plus Host. And a signal-feeds storefront. |
+| **What it is** | Six interactive demos you poke in the browser — measured mechanisms, plus Host. |
 | **What it's for** | Show the mechanism behind work done on my own hardware — not screenshots of it. |
 | **How to use it** | Open https://coinupbtc.xyz/ — pick a card. Or `./setup.sh` for a local preview. |
 
@@ -76,5 +76,3 @@ Inbound: [GitHub](https://github.com/Coinupbtc) · [X @coinupbtc](https://x.com/
 Static HTML, one file per page. Fraunces + IBM Plex Mono via Google Fonts. Design tokens match
 `coinupbtc.com` so the two domains read as one brand. The header motif is pure CSS — two
 `repeating-radial-gradient` ring sets, no image and no JavaScript.
-
-## Custom domain
