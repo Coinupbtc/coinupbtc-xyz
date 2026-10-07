@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /x/
-Disallow: /signals.html
 
 Sitemap: https://coinupbtc.xyz/sitemap.xml

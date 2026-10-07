@@ -31,6 +31,7 @@ The landing hub is **[coinupbtc.com](https://coinupbtc.com/)**
 - **Small.** Demos 01–05 are one HTML file each. 06 Host is one HTML file plus sprites.
   No backend, no framework, no build step, no bundler, no dependencies beyond a webfont.
 - **No tracking.** No analytics, no cookies, no third-party scripts, no network calls at runtime.
+- **No checkout.** This domain is the lab demos only. Paid signal feeds and paid training are not offered here.
 - **Numbers are measured, not asserted.** Demo 03 times the visitor's own machine and prints what
   it finds. Demo 04 uses per-Spark residents from this box.
   Where a page is a simplification, it says so and lists what it leaves out.
