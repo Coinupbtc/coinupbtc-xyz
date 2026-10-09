@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Nothing on this bench — coinupbtc.xyz</title>
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0e13">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink: #0c0e13;
+      --ink-2: #12151c;
+      --paper: #ece8df;
+      --acid: #c8f54a;
+      --mute: #8b9287;
+      --dim: #7d847a;
+      --line: rgba(236, 232, 223, 0.14);
+      --line-soft: rgba(236, 232, 223, 0.07);
+      --font-display: Fraunces, Georgia, "Times New Roman", serif;
+      --font-body: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+      --pad: clamp(1.15rem, 4vw, 4rem);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--ink);
+      color: var(--paper);
+      line-height: 1.5;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      position: relative;
+      isolation: isolate;
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+
+    a { color: inherit; text-underline-offset: 4px; transition: color .18s ease; }
+    a:hover { color: var(--acid); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+
+    .skip-link {
+      position: absolute; left: -9999px; top: 0;
+      background: var(--acid); color: var(--ink); padding: .6rem .9rem; z-index: 50;
+    }
+    .skip-link:focus { left: .5rem; top: .5rem; }
+
+    .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+
+    .top {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute);
+      padding: max(1rem, env(safe-area-inset-top, 0px)) var(--pad) 1rem;
+      background: color-mix(in srgb, var(--ink) 88%, transparent);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+    }
+    .top strong { color: var(--paper); font-weight: 500; letter-spacing: .1em; }
+    .top nav { display: flex; flex-wrap: wrap; gap: .2rem .15rem; }
+    .top nav a {
+      min-height: 44px; display: inline-flex; align-items: center;
+      padding: 0 .7rem; text-decoration: none;
+      border-bottom: 2px solid transparent;
+    }
+    .top nav a:hover { border-bottom-color: var(--acid); }
+
+    main { flex: 1; padding-block: clamp(2rem, 8vw, 5rem) clamp(3rem, 8vw, 5rem); }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(2rem, 8vw, 4.5rem);
+      line-height: 1;
+      letter-spacing: -.035em;
+      display: inline;
+      background: linear-gradient(var(--acid), var(--acid)) no-repeat 0 92% / 100% .14em;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+
+    .lede {
+      margin-top: 1.8rem;
+      max-width: 56ch;
+      color: #d6d3ca;
+      font-size: clamp(.92rem, 2.2vw, 1.08rem);
+      line-height: 1.7;
+    }
+
+    .units {
+      list-style: none;
+      margin-top: clamp(2rem, 6vw, 3.5rem);
+      border-top: 1px solid var(--line-soft);
+    }
+    .units li {
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .units a {
+      display: block;
+      min-height: 44px;
+      padding: .9rem 0;
+      text-decoration: none;
+      color: var(--paper);
+      font-size: clamp(.92rem, 2.4vw, 1.05rem);
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+    .units a:hover { color: var(--acid); }
+
+    .home { margin-top: clamp(2rem, 6vw, 3rem); }
+    .home a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      text-decoration: none;
+      border-bottom: 1px solid var(--line);
+      color: var(--paper);
+    }
+    .home a:hover { color: var(--acid); border-bottom-color: var(--acid); }
+
+    footer {
+      border-top: 1px solid var(--line-soft);
+      padding: 1.8rem 0 max(1.8rem, env(safe-area-inset-bottom, 0px));
+      font-size: .68rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
+    footer a { min-height: 44px; display: inline-flex; align-items: center; }
+
+    @media (max-width: 480px) {
+      .top { flex-wrap: wrap; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      a, .top nav a, .home a { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="wrap top">
+    <strong>The lab</strong>
+    <nav aria-label="Site">
+      <a href="/">Bench</a>
+      <a href="https://coinupbtc.com/">Resume and proof</a>
+      <a href="https://github.com/Coinupbtc">GitHub</a>
+    </nav>
+  </div>
+
+  <main id="main" class="wrap">
+    <h1>Nothing on this bench.</h1>
+    <p class="lede">The page you asked for isn't one of my units. Everything I run here is listed below.</p>
+
+    <ul class="units">
+      <li><a href="/demos/spec-decode.html">Unit 01 &#183; Speculative decoding</a></li>
+      <li><a href="/demos/memory-pack.html">Unit 02 &#183; Memory packer</a></li>
+      <li><a href="/demos/render-cost.html">Unit 03 &#183; Render cost</a></li>
+      <li><a href="/demos/mempool.html">Unit 04 &#183; Mempool fee bands</a></li>
+      <li><a href="/demos/host/">Unit 05 &#183; Host</a></li>
+      <li><a href="/demos/moire.html">Unit 06 &#183; Moir&#233; bench</a></li>
+    </ul>
+
+    <p class="home"><a href="/">Back to the bench &#8594;</a></p>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span><a href="https://coinupbtc.com/">coinupbtc.com</a></span>
+      <span><a href="https://github.com/Coinupbtc">github.com/Coinupbtc</a></span>
+      <span><a href="https://x.com/coinupbtc">x.com/coinupbtc</a></span>
+      <span>coinupbtc.xyz</span>
+    </div>
+  </footer>
+</body>
+</html>
