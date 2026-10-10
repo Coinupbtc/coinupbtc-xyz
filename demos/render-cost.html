@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <!--
-  13s -> 7.5ms — a real render bug, reproduced in the browser.
+  Render cost: a select-one-row bug that rebuilds every row, reproduced in the browser.
 
   Self-contained: no backend, no framework, no build step, no tracking.
   The numbers this page prints are measured on YOUR machine, not mine.
@@ -9,8 +9,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>13s → 7.5ms — the lab</title>
-  <meta name="description" content="A real O(N) render bug reproduced in the browser: 516 rows, one click, two implementations, timed live.">
+  <title>Render cost — the lab</title>
+  <meta name="description" content="A render bug reproduced in the browser: selecting one row rebuilt every row. Two implementations, timed live on your machine.">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#0c0e13">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
@@ -184,12 +184,12 @@
 
   <header class="wrap">
     <p class="idx">Demo 03</p>
-    <h1>13s → 7.5ms</h1>
+    <h1>Render cost</h1>
     <p class="lede">
-      A card-arbitrage table had 516 rows. Clicking one to select it took <b>13 seconds</b>.
-      The cause was not the data, the filtering, or the machine — it was that selecting a row
-      rebuilt every row, and read layout back from the DOM on each one. Below is the same bug
-      and the same fix, reproduced here. <b>Your browser does the timing.</b>
+      In a table UI, selecting one row rebuilt every row — and read layout back from the DOM
+      on each one — so the click got slower as the table grew. Below is that bug and its fix,
+      side by side. <b>Your browser does the timing</b>; the numbers on this page are measured
+      on your machine when you press Run.
     </p>
   </header>
 
@@ -198,8 +198,8 @@
       <div class="controls">
         <div class="ctl">
           <label for="rows">Rows in the table</label>
-          <div class="val" id="rowsVal">516</div>
-          <input type="range" id="rows" min="64" max="2048" step="4" value="516">
+          <div class="val" id="rowsVal">512</div>
+          <input type="range" id="rows" min="64" max="2048" step="4" value="512">
         </div>
         <div class="ctl">
           <label for="reps">Clicks per run (median)</label>
@@ -256,21 +256,20 @@
       <h2>What actually went wrong</h2>
       <p>
         The handler did the obvious thing: mark the clicked row as selected, then re-render the
-        table so the highlight shows up. Re-rendering meant building all 516 rows again. That
+        table so the highlight shows up. Re-rendering meant building every row again. That
         alone is <code>O(N)</code> work for an <code>O(1)</code> change, which is wasteful but
         survivable.
       </p>
       <p>
-        What made it <strong>13 seconds</strong> instead of 30 milliseconds was the second
-        mistake: each row's size was read back out of the layout engine immediately after it
-        was written. Writing invalidates layout; reading forces it to be recomputed on the spot.
-        Do both in a loop and the browser recalculates the whole document once per row —
-        <strong>516 full layout passes for one click.</strong>
+        The bigger cost was the second mistake: each row's size was read back out of the layout
+        engine immediately after it was written. Writing invalidates layout; reading forces it
+        to be recomputed on the spot. Do both in a loop and the browser recalculates the whole
+        document once per row — a full layout pass per row, for one click.
       </p>
       <div class="callout">
         The fix was not an optimisation. It was deleting work: stop rebuilding rows that did not
-        change, and stop asking for layout inside the loop. The click went to
-        <strong>7.5&nbsp;ms</strong> — flat, and no longer sensitive to row count.
+        change, and stop asking for layout inside the loop. The click cost stops depending on
+        row count.
       </div>
       <p>
         Drag <strong>rows</strong> up and run it again. The red bar should grow with the row
@@ -279,11 +278,10 @@
         there are 64 rows or 2048.
       </p>
       <p>
-        <strong>An honest note on the numbers.</strong> The original 13.0&nbsp;s → 7.5&nbsp;ms was
-        measured in a Python desktop UI, not in a browser, so the absolute figures here will not
-        match — your machine, your engine, and a much lighter row are all different. What
-        reproduces is the <em>shape</em>: an O(1) change priced as O(N), amplified by synchronous
-        layout reads, and a fix that is subtraction rather than cleverness.
+        <strong>An honest note on the numbers.</strong> The only timings on this page are the
+        ones your browser measures when you press Run; they depend on your machine and engine.
+        What the demo shows is the <em>shape</em>: an O(1) change priced as O(N), amplified by
+        synchronous layout reads, and a fix that is subtraction rather than cleverness.
       </p>
     </section>
     <nav class="demo-hop" aria-label="Next demo">
@@ -310,8 +308,8 @@
     var runBtn    = document.getElementById("run");
     var resetBtn  = document.getElementById("reset");
 
-    var SETS = ["Base", "Evolving", "Jungle", "Fossil", "Neo", "Aquapolis", "Skyridge", "Legend"];
-    var GRADE = ["raw", "PSA 8", "PSA 9", "PSA 10", "CGC 9", "BGS 9.5"];
+    var PARTS = ["Bracket", "Gasket", "Housing", "Shaft", "Spacer", "Valve", "Bushing", "Clip"];
+    var LOTS = ["A", "B", "C", "D", "E", "F"];
 
     var data = [];
     var selected = 0;
@@ -329,14 +327,14 @@
       var rnd = seeded(n);
       data = new Array(n);
       for (var i = 0; i < n; i++) {
-        var buy = 4 + rnd() * 240;
-        var sell = buy * (0.7 + rnd() * 0.95);
+        var value = 1 + rnd() * 99;
+        var dev = (rnd() - 0.5) * 6;
         data[i] = {
           id: i,
-          name: SETS[(rnd() * SETS.length) | 0] + " #" + (1 + ((rnd() * 250) | 0)) +
-                " · " + GRADE[(rnd() * GRADE.length) | 0],
-          buy: buy,
-          edge: ((sell - buy) / buy) * 100
+          name: PARTS[(rnd() * PARTS.length) | 0] + " " + (100 + ((rnd() * 900) | 0)) +
+                " · lot " + LOTS[(rnd() * LOTS.length) | 0],
+          value: value,
+          dev: dev
         };
       }
       selected = 0;
@@ -356,8 +354,8 @@
 
         var a = document.createElement("span"); a.className = "c-id";   a.textContent = "#" + d.id;
         var b = document.createElement("span"); b.className = "c-name"; b.textContent = d.name;
-        var c = document.createElement("span"); c.className = "c-num";  c.textContent = "$" + d.buy.toFixed(2);
-        var e = document.createElement("span"); e.className = "c-edge"; e.textContent = d.edge.toFixed(1) + "%";
+        var c = document.createElement("span"); c.className = "c-num";  c.textContent = d.value.toFixed(2);
+        var e = document.createElement("span"); e.className = "c-edge"; e.textContent = (d.dev >= 0 ? "+" : "") + d.dev.toFixed(1) + "%";
 
         row.appendChild(a); row.appendChild(b); row.appendChild(c); row.appendChild(e);
         table.appendChild(row);
@@ -537,7 +535,7 @@
       setRows(Number(rowsInput.value));
     });
 
-    setRows(516);
+    setRows(512);
   })();
   </script>
 </body>
