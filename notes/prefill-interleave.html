@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>A 90 s stall, fixed — coinupbtc.xyz</title>
+  <meta name="description" content="A long prompt froze every live stream on a two-DGX-Spark pair for two minutes. The patch that fixed it was merged upstream; here is the bug, the fix, and who measured what.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0e13">
+  <link rel="canonical" href="https://coinupbtc.xyz/notes/prefill-interleave.html">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c; --paper: #ece8df; --acid: #c8f54a;
+      --mute: #8b9287; --line: rgba(236, 232, 223, 0.14);
+      --font-display: Fraunces, Georgia, "Times New Roman", serif;
+      --font-body: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+      --pad: clamp(1.15rem, 4vw, 4rem);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); background: var(--ink); color: var(--paper);
+      line-height: 1.7; font-size: .95rem; overflow-x: hidden;
+      padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+    }
+    a { color: var(--acid); text-underline-offset: 4px; }
+    a:hover { color: var(--paper); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .wrap { width: min(760px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+    .top { padding: max(1rem, env(safe-area-inset-top, 0px)) 0 1rem; font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+    .top a { color: var(--mute); text-decoration: none; display: inline-flex; min-height: 44px; align-items: center; }
+    .top a:hover { color: var(--acid); }
+    h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 7vw, 3.4rem); line-height: 1; letter-spacing: -.03em; margin: 1.5rem 0 1rem; }
+    h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; margin: 2.4rem 0 .6rem; }
+    p { margin: 0 0 1rem; }
+    .meta { color: var(--mute); font-size: .78rem; margin-bottom: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: .88rem; }
+    th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--line); }
+    th { color: var(--mute); font-weight: 500; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+    td b { color: var(--acid); font-weight: 500; }
+    code { background: var(--ink-2); padding: .1em .35em; border-radius: 3px; font-size: .9em; overflow-wrap: anywhere; }
+    .src { border-left: 2px solid var(--acid); padding-left: 1rem; color: var(--mute); font-size: .85rem; margin: 1.5rem 0; }
+    footer { margin: 3rem 0 2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: .75rem; color: var(--mute); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top"><a href="/">&larr; The lab</a></div>
+    <main>
+      <h1>A 90&nbsp;second stall, fixed</h1>
+      <p class="meta">2026-10-19 · notes from two DGX Sparks · pseudonymous</p>
+
+      <p>
+        I serve DeepSeek-V4.1-Flash across two DGX Sparks with the
+        <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks">MiaAI-Lab recipe</a>
+        on the TensorFold engine. This morning a chat froze for two minutes the moment a second request
+        arrived with a very long prompt. I wrote it up as an issue, then wrote the fix. The lab merged it into
+        <code>main</code> the same day.
+      </p>
+
+      <h2>The bug</h2>
+      <p>
+        With <code>--parallel 4</code>, a stream that has already finished its prompt pass is supposed to keep decoding
+        while another request prefills. It didn't. Admitting a request runs its whole prompt pass before the engine
+        takes another decode round, so every live stream waited out the entire pass. A 201,336-token cold prompt took
+        119 seconds; the stream in front of it drew one token and then nothing.
+      </p>
+      <p>
+        Cancels had the same shape. The server only checks for disconnects at the top of its loop, so a client that left
+        mid-pass was not noticed until the pass returned (logged 100&nbsp;ms after it ended). The GPU was not stuck:
+        once the pass finished, the cold request decoded 386 tokens in about five seconds. The engine was busy, not hung,
+        and it was busy in one uninterruptible block.
+      </p>
+
+      <h2>The fix</h2>
+      <p>
+        Patch <code>0005-prefill-interleave</code>: the engine already runs a prompt pass in 2,048-row chunks. Between two
+        chunks, rank 0 now runs decode rounds for the other live streams for up to <code>N</code> ms, delivers their
+        tokens, and takes their cancels. The pass itself is left alone, and a cancel of the request being filled is
+        seen at the next chunk boundary. The patch ships off by default; the recipe turns it on with
+        <code>PREFILL_INTERLEAVE_MS=250</code>, passed to rank 0 as <code>TF_DS_PREFILL_INTERLEAVE_MS</code>.
+        Prompts with images still run whole. I added a host test with it: a fake backend, a six-chunk pass, and a
+        decoding stream that must get tokens and cancel before the pass ends.
+      </p>
+
+      <h2>The numbers</h2>
+      <p>These are the lab's measurements on their pair, not mine:</p>
+      <table>
+        <thead><tr><th>Test</th><th>Before</th><th>After</th></tr></thead>
+        <tbody>
+          <tr><td>Longest gap in a decoding stream during a ~120K-token cold prompt</td><td>90.1 s</td><td><b>1.3 s</b></td></tr>
+          <tr><td>Cancel noticed mid-pass</td><td>after the pass ends</td><td><b>0.74 s</b></td></tr>
+          <tr><td><code>tools/exact.py</code>, output vs previous image</td><td>—</td><td><b>31 / 31 identical</b></td></tr>
+        </tbody>
+      </table>
+      <p>
+        The 31-case match is the one I care about most. Interleaving reorders work; it must not change tokens.
+      </p>
+
+      <h2>What I don't claim</h2>
+      <p>
+        I reproduced the stall on my pair (the log lines are in the issue). The before/after table above comes from the
+        maintainers' own run, and they rewrote the README and changelog for the merged state. I have not re-run it on
+        their hardware or mine since the merge.
+      </p>
+
+      <p class="src">
+        Sources:
+        <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks/issues/3">issue #3</a> ·
+        <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks/pull/5">PR #5</a> (closed after the
+        content was merged as <code>e65785c</code>) ·
+        credit in the repo's <code>CREDITS.md</code> and <code>CHANGELOG</code>.
+      </p>
+    </main>
+    <footer>coinupbtc.xyz · <a href="https://github.com/Coinupbtc">GitHub</a> · <a href="https://x.com/coinupbtc">X</a></footer>
+  </div>
+</body>
+</html>
