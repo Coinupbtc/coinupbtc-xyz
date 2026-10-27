@@ -3,299 +3,176 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>The lab — coinupbtc.xyz</title>
-  <meta name="description" content="Small browser tools I built and measured on my home lab. Run them here; the numbers link to where I measured them.">
-  <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#0c0e13">
-
+  <title>The Lab · coinupbtc.xyz</title>
+  <meta name="description" content="Small demos you can run in the browser: speculative decoding, a memory packer for DGX Spark, a render bug and its fix, and a moiré bench. Built by Coinupbtc.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f5f7f6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e1312" media="(prefers-color-scheme: dark)">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="The lab">
-  <meta property="og:title" content="The lab — coinupbtc.xyz">
-  <meta property="og:description" content="Small browser tools I built and measured on my home lab. Run them here; the numbers link to where I measured them.">
+  <meta property="og:site_name" content="The Lab">
+  <meta property="og:title" content="The Lab · coinupbtc.xyz">
+  <meta property="og:description" content="Small demos you can run in the browser, each tied to something I measured.">
   <meta property="og:url" content="https://coinupbtc.xyz/">
   <meta property="og:image" content="https://coinupbtc.xyz/assets/og-image.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="A dark page titled 'The lab' with an intro line about small tools built to see how things behave, and the tops of three bench cards: Unit 01 Speculative decoding, Unit 02 Memory packer, and Unit 03 Render cost.">
+  <meta property="og:image:alt" content="The Lab: small demos you can run in the browser. coinupbtc.xyz">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@coinupbtc">
-  <meta name="twitter:creator" content="@coinupbtc">
   <meta name="twitter:image" content="https://coinupbtc.xyz/assets/og-image.png">
-  <meta name="twitter:image:alt" content="A dark page titled 'The lab' with an intro line about small tools built to see how things behave, and the tops of three bench cards: Unit 01 Speculative decoding, Unit 02 Memory packer, and Unit 03 Render cost.">
-  <link rel="image_src" href="https://coinupbtc.xyz/assets/og-image.png">
-
   <link rel="canonical" href="https://coinupbtc.xyz/">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
-
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b6b52'/%3E%3Crect x='7' y='20' width='18' height='4' fill='%23f5f7f6'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/lab.css">
   <style>
+    /* Same system as coinupbtc.com: one reading column, a 2x2 bench of demo cards. Tokens come from lab.css. */
     :root {
-      --ink: #0c0e13;
-      --ink-2: #12151c;
-      --paper: #ece8df;
-      --acid: #c8f54a;
-      --mute: #8b9287;
-      --dim: #7d847a;
-      --line: rgba(236, 232, 223, 0.14);
-      --line-soft: rgba(236, 232, 223, 0.07);
-      --font-display: Fraunces, Georgia, "Times New Roman", serif;
-      --font-body: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
-      --pad: clamp(1.15rem, 4vw, 4rem);
+      --step-0: 1.0625rem; --step-1: 1.25rem; --step-2: 1.625rem;
+      --step-3: clamp(2.1rem, 1.4rem + 3.2vw, 3.4rem);
+      --wrap: 72rem; --measure: 66ch;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-padding-top: 4.5rem; }
-
+    *, *::before, *::after { box-sizing: border-box; }
     body {
-      font-family: var(--font-body);
-      background: var(--ink);
-      color: var(--paper);
-      line-height: 1.5;
-      min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-      position: relative;
-      isolation: isolate;
-      padding-left: env(safe-area-inset-left, 0px);
-      padding-right: env(safe-area-inset-right, 0px);
+      margin: 0; background: var(--ink); color: var(--paper);
+      font: 400 var(--step-0)/1.6 var(--font-body);
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
     }
+    a { color: var(--acid); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; border-radius: 2px; }
+    h1, h2, h3, p { margin: 0; }
+    .wrap { max-width: var(--wrap); margin-inline: auto; }
+    .label { font: 500 0.8125rem/1.3 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
+    .skip { position: absolute; left: -999px; }
+    .skip:focus { left: max(16px, env(safe-area-inset-left, 0px)); top: 8px; background: var(--ink-2); padding: 6px 10px; z-index: 5; }
 
-    a { color: inherit; text-underline-offset: 4px; transition: color .18s ease; }
-    a:hover { color: var(--acid); }
-    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .top { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding-block: 1.1rem; border-bottom: 1px solid var(--line); }
+    .brand { font: 600 1.125rem/1 var(--font-display); color: var(--paper); text-decoration: none; margin-right: auto; }
+    .brand span { color: var(--mute); font-weight: 600; }
+    .top nav { display: flex; gap: 0.25rem 1.25rem; flex-wrap: wrap; }
+    .top nav a { color: var(--paper); text-decoration: none; font-size: 0.95rem; padding-block: 0.4rem; }
+    .top nav a:hover { color: var(--acid); }
 
-    .skip-link {
-      position: absolute; left: -9999px; top: 0;
-      background: var(--acid); color: var(--ink); padding: .6rem .9rem; z-index: 50;
-    }
-    .skip-link:focus { left: .5rem; top: .5rem; }
+    .hero { padding-block: clamp(2.5rem, 6vw, 4.5rem) 2.5rem; display: grid; gap: 1.25rem; }
+    .hero h1 { font-size: var(--step-3); max-width: 20ch; line-height: 1.12; }
+    .hero h1::after { content: none; }
+    .hero p:not(.label) { font-size: clamp(var(--step-0), 1rem + 0.5vw, var(--step-1)); line-height: 1.55; max-width: 58ch; }
 
-    .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+    section { padding-block: clamp(2rem, 5vw, 3.5rem); border-top: 1px solid var(--line); }
+    .sec-head { display: grid; gap: 0.5rem; margin-bottom: 1.75rem; max-width: var(--measure); }
+    .sec-head h2 { font-size: var(--step-2); }
+    .sec-head p { color: var(--mute); }
 
-    .top {
-      position: sticky; top: 0; z-index: 20;
-      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-      font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute);
-      padding: max(1rem, env(safe-area-inset-top, 0px)) var(--pad) 1rem;
-      background: color-mix(in srgb, var(--ink) 88%, transparent);
-      -webkit-backdrop-filter: blur(12px);
-      backdrop-filter: blur(12px);
-    }
-    .top strong { color: var(--paper); font-weight: 500; letter-spacing: .1em; }
-    .top nav { display: flex; flex-wrap: wrap; gap: .2rem .15rem; }
-    .top nav a {
-      min-height: 44px; display: inline-flex; align-items: center;
-      padding: 0 .7rem; text-decoration: none;
-      border-bottom: 2px solid transparent;
-    }
-    .top nav a:hover { border-bottom-color: var(--acid); }
-
-    header.hero { padding-block: clamp(2rem, 8vw, 5rem) clamp(1.5rem, 5vw, 2.8rem); }
-
-    h1 {
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: clamp(2.4rem, 11vw, 6.5rem);
-      line-height: .88;
-      letter-spacing: -.035em;
-      position: relative;
-      display: inline-block;
-    }
-    h1::after {
-      content: ""; position: absolute; left: -.02em; right: -.02em;
-      bottom: .1em; height: .14em; background: var(--acid); z-index: -1;
-    }
-
-    .lede {
-      margin-top: 1.8rem;
-      max-width: 56ch;
-      color: #d6d3ca;
-      font-size: clamp(.92rem, 2.2vw, 1.08rem);
-      line-height: 1.7;
-    }
-
-    main { flex: 1; }
-
-    #bench-h {
-      font-size: .66rem;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      color: var(--dim);
-      font-weight: 500;
-      margin-bottom: 1.2rem;
-    }
-
-    .rack {
-      list-style: none;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1px;
-      background: var(--line-soft);
-      border: 1px solid var(--line-soft);
-      margin-bottom: clamp(3rem, 8vw, 5rem);
-    }
-    @media (min-width: 720px) {
-      .rack { grid-template-columns: 1fr 1fr; }
-    }
-
+    .bench { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
     .unit {
-      background: var(--ink);
-      border: 1px solid var(--line);
-      padding: clamp(1.5rem, 3.5vw, 2.2rem);
-      display: flex;
-      flex-direction: column;
-      gap: .75rem;
-      position: relative;
+      display: grid; grid-template-rows: auto auto 1fr auto auto; gap: 0.75rem; min-width: 0;
+      background: var(--ink-2); border: 1px solid var(--line); border-radius: 8px; padding: clamp(1.25rem, 3vw, 1.75rem);
     }
-    .unit::before {
-      content: "";
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 2px;
-      background: var(--acid);
-      opacity: 0;
-      transition: opacity .18s ease;
+    .unit h3 { font-size: var(--step-1); }
+    .unit .what { color: var(--paper); }
+    .measured {
+      justify-self: start; display: inline-flex; flex-wrap: wrap; gap: 0.35rem 0.6rem; align-items: baseline;
+      border: 1px dashed var(--acid); border-radius: 4px; padding: 0.45rem 0.7rem; background: var(--acid-soft); font-size: 0.95rem;
     }
-    .unit:hover::before,
-    .unit:focus-within::before { opacity: 1; }
+    .measured .label { color: var(--acid); }
+    .open {
+      justify-self: start; display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px;
+      padding: 0.6rem 1rem; border-radius: 6px; font-weight: 600; text-decoration: none;
+      background: var(--acid); color: var(--ink);
+    }
+    .open:hover { filter: brightness(1.08); }
+    .num { font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-    .unit-no {
-      font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
-    }
-    .unit-name {
-      font-family: var(--font-display);
-      font-size: clamp(1.3rem, 3.2vw, 1.75rem);
-      font-weight: 700;
-      line-height: 1.1;
-      letter-spacing: -.02em;
-    }
-    .unit-what { color: var(--mute); font-size: .84rem; line-height: 1.65; flex: 1; }
+    .notes { list-style: none; margin: 0; padding: 0; }
+    .notes li { display: grid; gap: 0.25rem; padding-block: 1rem; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); max-width: var(--measure); }
+    .notes a { font-weight: 600; }
+    .notes p { color: var(--mute); }
 
-    .unit-preview[hidden] { display: none !important; }
+    footer { padding-block: 2rem 3rem; border-top: 1px solid var(--line); color: var(--mute); font-size: 0.9rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+    footer a { color: var(--mute); }
 
-    .unit-measured {
-      font-size: .7rem;
-      color: var(--dim);
-      letter-spacing: .04em;
-      border-top: 1px solid var(--line-soft);
-      padding-top: .75rem;
-      margin-top: .3rem;
-      line-height: 1.6;
-      overflow-wrap: anywhere;
-    }
-    .unit-measured a { color: var(--acid); }
-
-    .unit-open {
-      font-size: .78rem;
-      color: var(--paper);
-      line-height: 1.5;
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      align-self: flex-start;
-      text-decoration: none;
-      border-bottom: 1px solid var(--line);
-    }
-    .unit-open:hover { color: var(--acid); border-bottom-color: var(--acid); }
-
-    footer {
-      border-top: 1px solid var(--line-soft);
-      padding: 1.8rem 0 max(1.8rem, env(safe-area-inset-bottom, 0px));
-      font-size: .68rem;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--dim);
-    }
-    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1.5rem; }
-    footer a { min-height: 44px; display: inline-flex; align-items: center; }
-
-    @media (max-width: 480px) {
-      .top { flex-wrap: wrap; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      a, .unit, .unit::before, .unit-open, .top nav a { transition: none; }
-    }
+    @media (max-width: 760px) { .bench { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 600px) { .top nav { order: 3; width: 100%; } }
   </style>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="https://coinupbtc.com/">Coinupbtc <span>· Lab</span></a>
+      <nav aria-label="Site">
+        <a href="#bench">Demos</a>
+        <a href="#notes">Notes</a>
+        <a href="https://coinupbtc.com/">coinupbtc.com</a>
+        <a href="https://github.com/Coinupbtc">GitHub</a>
+      </nav>
+    </header>
 
-  <div class="wrap top">
-    <strong>The lab</strong>
-    <nav aria-label="Site">
-      <a href="#bench">Bench</a>
-      <a href="notes/prefill-interleave.html">Notes</a>
+    <main id="main">
+      <div class="hero">
+        <p class="label">The lab</p>
+        <h1>Small demos you can run in your browser</h1>
+        <p>Each one shows how something behaves, and where I measured it on my own machines, the number links to the file. For who I am and the work behind this, start at <a href="https://coinupbtc.com/">coinupbtc.com</a>.</p>
+      </div>
+
+      <section id="bench" aria-labelledby="bench-h">
+        <div class="sec-head">
+          <p class="label">The bench</p>
+          <h2 id="bench-h">Four demos</h2>
+        </div>
+        <ul class="bench">
+          <li class="unit" id="unit-spec-decode">
+            <p class="label">AI serving</p>
+            <h3>Speculative decoding</h3>
+            <p class="what">A small model drafts the next few words and the big model checks them all in one pass. Move the sliders to see when drafting saves time and when it costs time.</p>
+            <p class="measured"><span class="label">Measured</span> <span>On a copy-heavy refactor, <span class="num">34.33 → 74.48</span> tokens per second.</span> <a href="https://github.com/Coinupbtc/miaai35-tune/blob/main/REPORT.md#9-addendum-2026-07-09-v3-pass13-ngram-speculative-decode--kept--balanced-v3">Report §9</a></p>
+            <a class="open" href="demos/spec-decode.html">Open the demo <span aria-hidden="true">→</span></a>
+          </li>
+          <li class="unit" id="unit-memory-pack">
+            <p class="label">Capacity planning</p>
+            <h3>Memory packer</h3>
+            <p class="what">Pick one, two or three DGX Spark machines and the models you want to run, and see whether they fit. Each machine has its own memory; two machines are not one big pool.</p>
+            <p class="measured"><span class="label">Measured</span> <span><span class="num">121</span> GiB per machine; the video model holds <span class="num">89.42</span> GiB on one after loading.</span> <a href="https://github.com/Coinupbtc/MiniMax-H3-2x-DGX-Spark/blob/main/docs/RESULTS.md#load-profile">Results</a></p>
+            <a class="open" href="demos/memory-pack.html">Open the demo <span aria-hidden="true">→</span></a>
+          </li>
+          <li class="unit" id="unit-render-cost">
+            <p class="label">Performance</p>
+            <h3>Render cost</h3>
+            <p class="what">Selecting one row used to rebuild every row in the list. This runs the bug and the fix side by side and times both in your browser.</p>
+            <p class="measured"><span class="label">Measured</span> <span>In the real app: <span class="num">13 s</span> before the fix, <span class="num">7.5 ms</span> after, at <span class="num">516</span> records.</span></p>
+            <a class="open" href="demos/render-cost.html">Open the demo <span aria-hidden="true">→</span></a>
+          </li>
+          <li class="unit" id="unit-moire">
+            <p class="label">Measurement</p>
+            <h3>Moiré bench</h3>
+            <p class="what">Two grids that almost line up. The pattern you see is where they disagree. A vernier caliper reads small differences the same way: a tiny mismatch between two scales becomes easy to see.</p>
+            <p class="measured"><span class="label">Try</span> <span>Move one layer’s spacing by a single 1% step and watch the pattern shift a long way.</span></p>
+            <a class="open" href="demos/moire.html">Open the demo <span aria-hidden="true">→</span></a>
+          </li>
+        </ul>
+      </section>
+
+      <section id="notes" aria-labelledby="notes-h">
+        <div class="sec-head">
+          <p class="label">Notes</p>
+          <h2 id="notes-h">Write-ups</h2>
+        </div>
+        <ul class="notes">
+          <li><a href="notes/prefill-interleave.html">A 90-second stall, fixed</a><p>One long prompt stalled every live conversation on a two-machine setup, for two minutes on mine. I wrote the patch and it was merged upstream. The bug, the fix, and who measured what.</p></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <span>© 2026 Coinupbtc</span>
       <a href="https://coinupbtc.com/">coinupbtc.com</a>
-      <a href="https://github.com/Coinupbtc">GitHub</a>
-    </nav>
+      <a href="https://github.com/Coinupbtc">github.com/Coinupbtc</a>
+      <a href="https://x.com/coinupbtc">x.com/coinupbtc</a>
+    </footer>
   </div>
-
-  <header class="hero wrap">
-    <h1>The lab</h1>
-    <p class="lede">
-      Small tools I built to see how things actually behave. Run them here; the numbers link to where I measured them.
-    </p>
-  </header>
-
-  <main id="main" class="wrap">
-    <section id="bench" aria-labelledby="bench-h">
-      <h2 id="bench-h">The bench</h2>
-
-      <ul class="rack">
-        <li class="unit" id="unit-spec-decode">
-          <span class="unit-no">Unit 01</span>
-          <h3 class="unit-name">Speculative decoding</h3>
-          <p class="unit-what">A small model guesses tokens ahead and a big one checks the guess in one pass, so you can see where speedup peaks and falls.</p>
-          <div class="unit-preview" data-media="pending" hidden aria-hidden="true"></div>
-          <p class="unit-measured">Measured on: copy-heavy refactor 34.33 &#8594; 74.48 t/s with n-gram speculation <a href="https://github.com/Coinupbtc/miaai35-tune/blob/main/REPORT.md#9-addendum-2026-07-09-v3-pass13-ngram-speculative-decode--kept--balanced-v3">miaai35-tune REPORT &#167;9</a></p>
-          <a class="unit-open" href="demos/spec-decode.html">Open <span aria-hidden="true">&#8594;</span></a>
-        </li>
-
-        <li class="unit" id="unit-memory-pack">
-          <span class="unit-no">Unit 02</span>
-          <h3 class="unit-name">Memory packer</h3>
-          <p class="unit-what">Pick 1, 2 or 3 Sparks and see which models fit in each machine's memory, because memory is per machine, not a shared pool.</p>
-          <div class="unit-preview" data-media="pending" hidden aria-hidden="true"></div>
-          <p class="unit-measured">Measured on: 121 GiB unified memory per Spark <a href="https://github.com/Coinupbtc/miaai35-tune/blob/main/REPORT.md#1-system-inventory">miaai35-tune REPORT &#167;1</a></p>
-          <p class="unit-measured">Measured on: H3 rank 0 holds 89.42 GiB after load <a href="https://github.com/Coinupbtc/MiniMax-H3-2x-DGX-Spark/blob/main/docs/RESULTS.md#load-profile">MiniMax-H3 RESULTS</a></p>
-          <a class="unit-open" href="demos/memory-pack.html">Open <span aria-hidden="true">&#8594;</span></a>
-        </li>
-
-        <li class="unit" id="unit-render-cost">
-          <span class="unit-no">Unit 03</span>
-          <h3 class="unit-name">Render cost</h3>
-          <p class="unit-what">A render bug where selecting one row rebuilt every row, reproduced with the fix, timed by your own browser.</p>
-          <div class="unit-preview" data-media="pending" hidden aria-hidden="true"></div>
-          <a class="unit-open" href="demos/render-cost.html">Open <span aria-hidden="true">&#8594;</span></a>
-        </li>
-
-
-
-        <li class="unit" id="unit-moire">
-          <span class="unit-no">Unit 04</span>
-          <h3 class="unit-name">Moir&#233; bench</h3>
-          <p class="unit-what">Two grids that almost agree, and the pattern you see is their disagreement.</p>
-          <div class="unit-preview" data-media="pending" hidden aria-hidden="true"></div>
-          <a class="unit-open" href="demos/moire.html">Open <span aria-hidden="true">&#8594;</span></a>
-        </li>
-      </ul>
-    </section>
-  </main>
-
-  <footer>
-    <div class="wrap">
-      <span><a href="https://coinupbtc.com/">coinupbtc.com</a></span>
-      <span><a href="https://github.com/Coinupbtc">github.com/Coinupbtc</a></span>
-      <span><a href="https://x.com/coinupbtc">x.com/coinupbtc</a></span>
-      <span>coinupbtc.xyz</span>
-    </div>
-  </footer>
 </body>
 </html>

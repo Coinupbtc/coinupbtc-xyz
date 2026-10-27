@@ -11,19 +11,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Render cost — the lab</title>
   <meta name="description" content="A render bug reproduced in the browser: selecting one row rebuilt every row. Two implementations, timed live on your machine.">
-  <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#0c0e13">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f5f7f6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e1312" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/lab.css">
 
   <style>
     :root {
       --ink: #0c0e13; --ink-2: #12151c; --ink-3: #191d26;
       --paper: #ece8df; --acid: #c8f54a; --hot: #ff6b5e;
       --mute: #8b9287; --dim: #5f6660;
-      --line: rgba(236,232,223,.14); --line-soft: rgba(236,232,223,.07);
+      --line: color-mix(in srgb, var(--paper) 14%, transparent); --line-soft: color-mix(in srgb, var(--paper) 7%, transparent);
       --font-display: Fraunces, Georgia, serif;
       --font-body: "IBM Plex Mono", ui-monospace, monospace;
       --pad: clamp(1.15rem, 4vw, 3.5rem);
@@ -51,7 +53,7 @@
       font-family: var(--font-display); font-weight: 700; letter-spacing: -.03em;
       font-size: clamp(2rem, 6.5vw, 3.6rem); line-height: 1; margin-top: .5rem;
     }
-    .lede { margin-top: 1.2rem; max-width: 68ch; color: #d6d3ca; font-size: .92rem; line-height: 1.75; }
+    .lede { margin-top: 1.2rem; max-width: 68ch; color: var(--paper-2); font-size: .92rem; line-height: 1.75; }
     .lede b { color: var(--paper); font-weight: 500; }
 
     main { flex: 1; padding-bottom: clamp(3rem, 7vw, 5rem); }
@@ -73,7 +75,7 @@
       border: none; padding: .8rem 1.3rem; cursor: pointer; font-weight: 500;
       transition: background .18s ease, transform .18s ease;
     }
-    .btn:hover:not(:disabled) { background: #d9ff63; transform: translateY(-2px); }
+    .btn:hover:not(:disabled) { background: color-mix(in srgb, var(--acid) 85%, var(--ink)); transform: translateY(-2px); }
     .btn:disabled { opacity: .45; cursor: progress; transform: none; }
     .btn.ghost { background: none; color: var(--paper); border: 1px solid var(--line); }
     .btn.ghost:hover:not(:disabled) { border-color: var(--acid); color: var(--acid); background: none; }
@@ -107,11 +109,11 @@
     #table { height: 260px; overflow-y: auto; background: var(--ink); }
     .row {
       display: grid; grid-template-columns: 4.5rem 1fr 6rem 5rem; gap: .8rem;
-      padding: .4rem 1rem; font-size: .74rem; border-bottom: 1px solid rgba(236,232,223,.04);
+      padding: .4rem 1rem; font-size: .74rem; border-bottom: 1px solid color-mix(in srgb, var(--paper) 4%, transparent);
       cursor: pointer; align-items: baseline;
     }
     .row:hover { background: var(--ink-2); }
-    .row.sel { background: rgba(200,245,74,.14); box-shadow: inset 3px 0 0 var(--acid); }
+    .row.sel { background: color-mix(in srgb, var(--acid) 14%, transparent); box-shadow: inset 3px 0 0 var(--acid); }
     .row .c-id { color: var(--dim); font-variant-numeric: tabular-nums; }
     .row .c-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .row .c-num { text-align: right; font-variant-numeric: tabular-nums; color: var(--mute); }
@@ -130,7 +132,7 @@
     }
     .callout {
       border-left: 2px solid var(--acid); padding: .2rem 0 .2rem 1.1rem;
-      margin: 1.4rem 0; color: #d6d3ca; font-size: .87rem; line-height: 1.8;
+      margin: 1.4rem 0; color: var(--paper-2); font-size: .87rem; line-height: 1.8;
     }
 
     footer {
@@ -179,7 +181,7 @@
 <body>
   <div class="wrap top">
     <a href="../index.html">← the lab</a>
-    <a href="https://coinupbtc.com/">Hub</a>
+    <a href="https://coinupbtc.com/">coinupbtc.com</a>
   </div>
 
   <header class="wrap">
@@ -285,8 +287,8 @@
       </p>
     </section>
     <nav class="demo-hop" aria-label="Next demo">
-      <a href="spec-decode.html">← 02 Speculative decoding</a>
-      <a href="memory-pack.html">04 121 GB packer →</a>
+      <a href="memory-pack.html">← 02 Memory packer</a>
+      <a href="moire.html">04 Moiré bench →</a>
     </nav>
   </main>
 

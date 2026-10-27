@@ -10,18 +10,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>121 GB packer — the lab</title>
   <meta name="description" content="Pack models onto 1, 2, or 3 Sparks. Each tank is 121 GB of unified memory. TP1 and TP2 included.">
-  <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#0c0e13">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f5f7f6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e1312" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/lab.css">
   <style>
     :root {
       --ink: #0c0e13; --ink-2: #12151c;
       --paper: #ece8df; --acid: #c8f54a; --hot: #ff6b5e;
       --mute: #8b9287; --dim: #5f6660;
-      --line: rgba(236,232,223,.14); --line-soft: rgba(236,232,223,.07);
+      --line: color-mix(in srgb, var(--paper) 14%, transparent); --line-soft: color-mix(in srgb, var(--paper) 7%, transparent);
       --font-display: Fraunces, Georgia, serif;
       --font-body: "IBM Plex Mono", ui-monospace, monospace;
       --pad: clamp(1.15rem, 4vw, 3.5rem);
@@ -71,7 +73,7 @@
       background: var(--ink); color: var(--paper); border: 1px solid var(--line);
       letter-spacing: .08em; text-transform: uppercase;
     }
-    .topo button.on { border-color: var(--acid); background: rgba(200,245,74,.1); color: var(--acid); }
+    .topo button.on { border-color: var(--acid); background: color-mix(in srgb, var(--acid) 10%, transparent); color: var(--acid); }
     .stage { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(240px, .85fr); gap: 1.4rem; align-items: start; }
     @media (max-width: 720px) {
       .stage { grid-template-columns: 1fr; }
@@ -84,7 +86,7 @@
       color: var(--paper); padding: .75rem .9rem; min-height: 52px;
       display: grid; grid-template-columns: 1fr auto; gap: .35rem 1rem; align-items: center;
     }
-    .mod.on { border-color: var(--acid); background: rgba(200,245,74,.08); }
+    .mod.on { border-color: var(--acid); background: color-mix(in srgb, var(--acid) 8%, transparent); }
     .mod.locked { cursor: not-allowed; }
     .mod .name { font-family: var(--font-display); font-size: 1.02rem; font-weight: 700; }
     .mod .why { font-size: .7rem; color: var(--mute); grid-column: 1 / -1; }
@@ -113,8 +115,8 @@
         to top,
         transparent 0,
         transparent calc(10% - 1px),
-        rgba(236,232,223,.09) calc(10% - 1px),
-        rgba(236,232,223,.09) 10%
+        color-mix(in srgb, var(--paper) 9%, transparent) calc(10% - 1px),
+        color-mix(in srgb, var(--paper) 9%, transparent) 10%
       );
       pointer-events: none;
     }
@@ -133,7 +135,7 @@
     .verdict .big.ok { color: var(--acid); }
     .verdict .big.bad { color: var(--hot); }
     .verdict p { margin-top: .45rem; color: var(--mute); font-size: .84rem; max-width: 62ch; line-height: 1.65; }
-    .lede { margin-top: 1.1rem; max-width: 68ch; color: #d6d3ca; font-size: .92rem; line-height: 1.75; }
+    .lede { margin-top: 1.1rem; max-width: 68ch; color: var(--paper-2); font-size: .92rem; line-height: 1.75; }
     .story { margin-top: clamp(2.2rem, 6vw, 3.4rem); max-width: 72ch; }
     .story h2 { font-family: var(--font-display); font-size: clamp(1.3rem, 3.4vw, 1.9rem); margin-bottom: .8rem; }
     .story p { color: var(--mute); font-size: .87rem; line-height: 1.8; margin-bottom: 1rem; }
@@ -160,12 +162,12 @@
     <a href="../index.html">← the lab</a>
     <nav aria-label="Lab">
       <a href="../index.html">All demos</a>
-      <a href="https://coinupbtc.com/">Hub</a>
+      <a href="https://coinupbtc.com/">coinupbtc.com</a>
     </nav>
   </div>
 
   <header class="wrap">
-    <p class="idx">Demo 04</p>
+    <p class="idx">Demo 02</p>
     <h1>121 GB packer</h1>
     <p class="use"><b>Use it:</b> Pick <b>1 / 2 / 3 Sparks</b>. Each column is one machine’s <b>121 GB</b> tank. Tap a model. At 85% full, the tank should look 85% full.</p>
   </header>
@@ -205,7 +207,7 @@
     </section>
 
     <nav class="demo-hop" aria-label="Next demo">
-      <a href="mempool.html">← 01 Fee-band router</a>
+      <a href="spec-decode.html">← 01 Speculative decoding</a>
       <a href="render-cost.html">03 Render cost →</a>
     </nav>
   </main>
@@ -223,27 +225,27 @@
     "use strict";
     var PER = 121;
     var sparks = 2;
-    var OS = { id: "os", name: "OS + Hermes", gb: 8, perSpark: true, always: true, color: "#8b9287",
+    var OS = { id: "os", name: "OS + Hermes", gb: 8, perSpark: true, always: true, color: "#b9c4c0",
       why: "Always on, every Spark. Desktop, kernel, agent stack.", label: "8 GB each" };
     var MODS = [
-      { id: "ds4f", name: "DS4F-0731", gb: 79.2, kind: "cluster", color: "#c8f54a",
+      { id: "ds4f", name: "DS4F-0731", gb: 79.2, kind: "cluster", color: "#7fcfae",
         why: "79.2 GB per rank. TP2 fills Spark 1 and 2. TP1 on a single Spark.",
         label: "79.2 GB / rank" },
-      { id: "kv", name: "KV cache", gb: 10.3, kind: "cluster", needs: "ds4f", color: "#a8e04a",
+      { id: "kv", name: "KV cache", gb: 10.3, kind: "cluster", needs: "ds4f", color: "#b5e2cd",
         why: "Per rank, live util 0.75. Needs DS4F.", label: "10.3 GB / rank" },
-      { id: "vision", name: "Vision 4B", gb: 5.4, kind: "sidecar", color: "#63b6ff",
+      { id: "vision", name: "Vision 4B", gb: 5.4, kind: "sidecar", color: "#9cc8ea",
         why: "TP1 sidecar. Sits on Spark 2 beside the cluster when you have two.",
         label: "5.4 GB · TP1" },
-      { id: "helper", name: "Helper 35B", gb: 23, kind: "spare", color: "#d9ff63",
+      { id: "helper", name: "Helper 35B", gb: 23, kind: "spare", color: "#d9db8f",
         why: "llama.cpp NVFP4, TP1. On 3 Sparks it takes the spare. On 2 it displaces the cluster.",
         label: "23 GB · TP1" },
-      { id: "h3", name: "H3 video", gb: [89.4, 41.4], kind: "h3", minSparks: 2, color: "#ff6b5e",
+      { id: "h3", name: "H3 video", gb: [89.4, 41.4], kind: "h3", minSparks: 2, color: "#f2a68a",
         why: "Rank 0 is 89.4 GB on Spark 1. Rank 1 is 41.4 GB. Needs two Sparks.",
         label: "89.4 + 41.4 · TP2" },
-      { id: "qwen27", name: "Qwen 27B", gb: 36, kind: "spare", color: "#7ec8e3",
+      { id: "qwen27", name: "Qwen 27B", gb: 36, kind: "spare", color: "#a6d6e3",
         why: "TP1 deep lane. 36 GB KV pool measured. TP2 deadlocked — not shipped.",
         label: "36 GB · TP1" },
-      { id: "gemma", name: "Gemma 31B", gb: 19, kind: "spare", color: "#e8c36a",
+      { id: "gemma", name: "Gemma 31B", gb: 19, kind: "spare", color: "#e8cc93",
         why: "Ollama 19 GB. TP1. Fits a spare Spark.", label: "19 GB · TP1" }
     ];
     var on = { os: true, ds4f: true, kv: true, vision: true, helper: false, h3: false, qwen27: false, gemma: false };
