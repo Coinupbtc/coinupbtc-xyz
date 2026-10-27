@@ -1,0 +1,38 @@
+/* Shared palette and type for coinupbtc.xyz, matching coinupbtc.com.
+   The demo pages were written dark-first, so their names are inverted:
+   --ink is the page background and --paper is the text color.
+   `html:root` outranks each page's own `:root` block, so these values win
+   while the pages keep their layout rules (--pad and the rest). */
+html:root {
+  --ink: #f5f7f6;        /* page background */
+  --ink-2: #ffffff;      /* raised panel */
+  --ink-3: #eef2f0;
+  --paper: #14191a;      /* text */
+  --paper-2: #2c3533;    /* secondary text */
+  --mute: #56625f;
+  --dim: #5e6a66;
+  --line: #d5dcda;
+  --line-soft: #e3e8e6;
+  --acid: #0b6b52;       /* accent: calibrated-label green */
+  --acid-soft: #e2efea;
+  --hot: #a6411a;
+  --cool: #1f5f8b;
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  html:root {
+    --ink: #0e1312; --ink-2: #141b19; --ink-3: #1a2320;
+    --paper: #e6ebe9; --paper-2: #c9d2ce; --mute: #9aa8a3; --dim: #8b9893;
+    --line: #27322f; --line-soft: #1d2724;
+    --acid: #5ccaa0; --acid-soft: #15261f; --hot: #f08c62; --cool: #6cb4e4;
+    color-scheme: dark;
+  }
+}
+
+html h1, html h2, html h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+html h1::after { background: var(--acid-soft); }
+html :is(code, kbd, pre, output, samp) { font-family: var(--font-mono); }
+html button, html input, html select { font-family: inherit; }

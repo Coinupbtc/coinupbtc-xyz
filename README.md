@@ -1,79 +1,46 @@
-# coinupbtc.xyz — the lab
+# coinupbtc.xyz · The Lab
 
-![Screenshot](docs/screenshots/hero.png)
+![coinupbtc.xyz homepage](docs/screenshots/hero.webp)
 
-## At a glance
-
-| | |
-|---|---|
-| **What it is** | Six interactive demos I built for you to poke in the browser — measured mechanisms, plus Host. |
-| **What it's for** | I want to show the mechanism behind work done on my own hardware — not screenshots of it. |
-| **How to use it** | Open https://coinupbtc.xyz/ — pick a card. Or run `./setup.sh` for a local preview. |
-
-The landing hub is **[coinupbtc.com](https://coinupbtc.com/)**
-([repo](https://github.com/Coinupbtc/Coinupbtc.github.io)). This domain is the part you can poke.
+Source for **[coinupbtc.xyz](https://coinupbtc.xyz/)**: small demos you can run in the browser, each tied to something I measured on two NVIDIA DGX Spark machines. The hiring homepage is **[coinupbtc.com](https://coinupbtc.com/)** ([repo](https://github.com/Coinupbtc/Coinupbtc.github.io)).
 
 ## The demos
 
-| | Page | What it does |
+| | Page | What it shows |
 |---|---|---|
-| 01 | [`demos/mempool.html`](demos/mempool.html) | Simulated mempool. Transactions arrive, sort into fee bands, and race for space in the next four blocks. Set a fee rate and see which block takes you — or whether the cutoff climbs past you when demand rises. |
-| 02 | [`demos/spec-decode.html`](demos/spec-decode.html) | Speculative decoding. A small model guesses `k` tokens ahead, a big one verifies in a single pass. I plot speedup against draft length so the peak — and the decline past it — is visible. |
-| 03 | [`demos/render-cost.html`](demos/render-cost.html) | A render bug I reproduced: selecting one row rebuilt every row. Two implementations, **timed in your browser**. |
-| 04 | [`demos/memory-pack.html`](demos/memory-pack.html) | Pick 1 / 2 / 3 Sparks. Tap models. Watch each 121 GB tank fill — per-Spark residents from my box. |
-| 05 | [`demos/moire.html`](demos/moire.html) | Two grids that almost agree. Detune or rotate one and the interference pattern appears. I include the exact parameters of the site-motif headers. |
-| 06 | [`demos/host/`](demos/host/) | Slash-command Host. `/twirl` `/walk` `/roar`. |
+| 01 | [`demos/spec-decode.html`](demos/spec-decode.html) | Speculative decoding: a small model drafts `k` tokens, the big model checks them in one pass. Speedup against draft length, so the peak and the decline after it are visible. |
+| 02 | [`demos/memory-pack.html`](demos/memory-pack.html) | Pick 1, 2 or 3 Sparks and the models to run, and watch each 121 GB machine fill. Resident sizes come from my machines. |
+| 03 | [`demos/render-cost.html`](demos/render-cost.html) | A render bug where selecting one row rebuilt every row, next to the fix, **timed in your browser**. |
+| 04 | [`demos/moire.html`](demos/moire.html) | Two grids that almost agree. A 1% spacing change moves the interference pattern a long way, the principle a vernier scale uses. |
 
-![Host](docs/screenshots/host.png)
+Two older demos are still online but off the main page: the [fee-band router](https://coinupbtc.xyz/demos/mempool.html) and [Host](https://coinupbtc.xyz/demos/host/).
+
+Notes: [A 90-second stall, fixed](notes/prefill-interleave.html), a prefill bug I reported and patched upstream.
 
 ## Rules these pages follow
 
-- **Small.** Demos 01–05 are one HTML file each. 06 Host is one HTML file plus sprites.
-  No backend, no framework, no build step, no bundler, no dependencies beyond a webfont.
-- **No tracking.** No analytics, no cookies, no third-party scripts, no network calls at runtime.
-- **Demos only.** This domain hosts the lab demos and nothing else.
-- **Numbers are measured, not asserted.** Demo 03 times your own machine and prints what
-  it finds. Demo 04 uses per-Spark residents from my box.
-  Where a page is a simplification, it says so and lists what it leaves out.
-- **Motion is optional.** Every animation respects `prefers-reduced-motion`.
+- **Small.** One HTML file per demo. No backend, framework, build step or bundler.
+- **No tracking.** No analytics, cookies or runtime network calls beyond the web fonts.
+- **Measured, not asserted.** Demo 03 times your own machine and prints what it finds. Demo 02 uses resident sizes from my machines. Where a page simplifies, it says what it leaves out.
+- **Motion is optional.** Animations respect `prefers-reduced-motion`.
+- **One look with coinupbtc.com.** `assets/lab.css` holds the shared colors and fonts, light and dark.
 
 ## Notes worth keeping
 
-**Demo 03 — timer resolution is a trap.** The fast path runs far under the clock's resolution, and
-browsers deliberately coarsen `performance.now()` to resist fingerprinting (Brave quantises to
-100µs). Timing a single call, or even a fixed batch, can land inside one tick and read `0.00` —
-which would make the headline ratio a fabrication. I grow the batch until the total clears
-the timer floor by a wide margin, then divide. I also cap the slow path against a 4-second
-budget so a 2048-row run cannot lock the tab, and I race `requestAnimationFrame` against a timer so
-a backgrounded tab cannot stall the run forever.
+**Demo 03: timer resolution is a trap.** The fast path runs far under the clock's resolution, and browsers coarsen `performance.now()` to resist fingerprinting (Brave quantizes to 100 µs). Timing a single call can land inside one tick and read `0.00`, which would make the headline ratio a fabrication. The page grows the batch until the total clears the timer floor by a wide margin, then divides. It caps the slow path at a 4-second budget so a 2,048-row run cannot lock the tab.
 
-**Demo 01 — the simulation is calibrated, not decorative.** I tuned arrival volume against block
-drain so that "Busy" holds the backlog roughly steady; the demand slider therefore genuinely decides
-whether the mempool grows or clears, and the cutoff moves with it. Each moving dot carries a bundle
-of transactions rather than one, because drawing them individually would put tens of thousands of
-rectangles on screen for no extra information.
+## Run it locally
 
-## Try it
-
-### One command
 ```bash
 git clone https://github.com/Coinupbtc/coinupbtc-xyz.git
 cd coinupbtc-xyz && ./setup.sh
-# → http://127.0.0.1:8766/
 ```
 
-### One click
-https://coinupbtc.xyz/ — or Host at https://coinupbtc.xyz/demos/host/
+Or open `index.html` directly; the pages work from `file://` except Host, which needs the folder served.
 
-Or open `index.html` directly. Demos 01–05 work from `file://`; Host needs the folder (or `./setup.sh`).
+Share card: `scripts/og-card.html`, rendered to `assets/og-image.png` by `scripts/export-og.sh`.
 
-## Contact policy
+## Contact
 
-Pseudonymous: no real name, employer, school, phone, or street address.
-Inbound: [GitHub](https://github.com/Coinupbtc) · [X @coinupbtc](https://x.com/coinupbtc).
-
-## Stack
-
-Static HTML, one file per page. Fraunces + IBM Plex Mono via Google Fonts. I match design tokens to
-`coinupbtc.com` so the two domains read as one brand. The header motif is pure CSS — two
-`repeating-radial-gradient` ring sets, no image and no JavaScript.
+Pseudonymous: no real name, employer, phone or street address.
+[GitHub](https://github.com/Coinupbtc) · [X @coinupbtc](https://x.com/coinupbtc) · coinupbtc@gmail.com
