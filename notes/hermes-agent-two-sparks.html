@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hermes Agent on two Sparks — coinupbtc.xyz</title>
+  <meta name="description" content="Four months of Hermes Agent from Nous Research on two DGX Sparks serving DeepSeek-V4.1-Flash locally: what runs, the engine patches that made agent traffic work, and what broke in Hermes and how I found it.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f5f7f6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e1312" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://coinupbtc.xyz/notes/hermes-agent-two-sparks.html">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/lab.css">
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c; --paper: #ece8df; --acid: #c8f54a;
+      --mute: #8b9287; --line: color-mix(in srgb, var(--paper) 14%, transparent);
+      --font-display: Fraunces, Georgia, "Times New Roman", serif;
+      --font-body: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+      --pad: clamp(1.15rem, 4vw, 4rem);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); background: var(--ink); color: var(--paper);
+      line-height: 1.7; font-size: .95rem; overflow-x: hidden;
+      padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+    }
+    a { color: var(--acid); text-underline-offset: 4px; }
+    a:hover { color: var(--paper); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .wrap { width: min(760px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+    .top { padding: max(1rem, env(safe-area-inset-top, 0px)) 0 1rem; font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+    .top a { color: var(--mute); text-decoration: none; display: inline-flex; min-height: 44px; align-items: center; }
+    .top a:hover { color: var(--acid); }
+    h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 7vw, 3.4rem); line-height: 1; letter-spacing: -.03em; margin: 1.5rem 0 1rem; }
+    h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; margin: 2.4rem 0 .6rem; }
+    p { margin: 0 0 1rem; }
+    .meta { color: var(--mute); font-size: .78rem; margin-bottom: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: .88rem; }
+    th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--line); }
+    th { color: var(--mute); font-weight: 500; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+    td b { color: var(--acid); font-weight: 500; }
+    code { background: var(--ink-2); padding: .1em .35em; border-radius: 3px; font-size: .9em; overflow-wrap: anywhere; }
+    .src { border-left: 2px solid var(--acid); padding-left: 1rem; color: var(--mute); font-size: .85rem; margin: 1.5rem 0; }
+    footer { margin: 3rem 0 2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: .75rem; color: var(--mute); }
+    ul.list { margin: 0 0 1rem 1.2rem; }
+    ul.list li { margin-bottom: .45rem; }
+    .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .scroll table { min-width: 560px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top"><a href="/">&larr; The lab</a></div>
+    <main>
+      <h1>Hermes Agent on two DGX&nbsp;Sparks</h1>
+      <p class="meta">2026-10-27 · four months of notes · pseudonymous</p>
+
+      <p>
+        Since June 28 I've run <a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a> from Nous Research
+        around the clock at home. It talks to a model served on two DGX Sparks in the same room; chat never goes to a cloud API.
+        This is what runs, what I changed in the engine so agent traffic works, and what broke in Hermes and how I found it.
+      </p>
+
+      <h2>What runs</h2>
+      <table>
+        <tbody>
+          <tr><th>Machines</th><td>2× NVIDIA DGX Spark (GB10), 121&nbsp;GiB unified memory each, joined by two ConnectX-7 cables (218&nbsp;Gb/s)</td></tr>
+          <tr><th>Model</th><td>DeepSeek-V4.1-Flash-1017, the <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks">MiaAI-Lab</a> 2.9&nbsp;bpw build, split across both machines on the TensorFold engine</td></tr>
+          <tr><th>Serving</th><td>1,048,576-token context, 4 streams, vision, thinking on</td></tr>
+          <tr><th>Measured</th><td>GSM8K <b>99.2</b> · HumanEval <b>96.3</b> · <b>72</b>&nbsp;tok/s on one stream (my harness, Oct&nbsp;19)</td></tr>
+          <tr><th>Hermes</th><td>v0.22.5: a Telegram chat profile (1,499 sessions) and a delegated-work profile (424 sessions)</td></tr>
+          <tr><th>Scheduled</th><td>46 jobs: a morning brief, an overnight research queue, health checks</td></tr>
+        </tbody>
+      </table>
+      <p>
+        One Telegram turn averages 22.7 model steps. Every request opens with about 27,000 tokens of system prompt and
+        tool schemas, and the engine's prefix cache serves 97% of a request from memory. Here, the cost of an agent
+        isn't the prompt. It's the round trips.
+      </p>
+
+      <h2>What I changed in the engine</h2>
+      <p>
+        Agent traffic isn't chat: long prompts, many short steps, tool calls in between. I sent four patches to the
+        recipe. Three are on its <code>main</code> branch, credited in its <code>CREDITS.md</code>.
+      </p>
+      <div class="scroll">
+      <table>
+        <thead><tr><th>Patch</th><th>Problem</th><th>Result</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Prefill interleave</td><td>One long prompt froze every live stream until its whole prompt pass finished.</td><td>Longest gap 90.1&nbsp;s &rarr; <b>1.3&nbsp;s</b> (maintainers' run). <a href="prefill-interleave.html">Write-up</a></td><td>On main</td></tr>
+          <tr><td>Tool-call prose</td><td>A non-streamed reply with tool calls came back as <code>content: null</code>; a 3,671-character plan was dropped.</td><td>Long tool replies round-trip <b>3/3</b> (was 0/3)</td><td>On main</td></tr>
+          <tr><td>Plain request text</td><td>Text that spelled a control token was read as that token, so a fetched page or file could forge a user turn, <code>&lt;/think&gt;</code> or a tool call.</td><td>Spelled tokens stay text; clean prompts byte-identical</td><td>On main; the maintainers extended it to one more route</td></tr>
+          <tr><td>Step-ahead</td><td>Each agent step re-read its own previous reply from scratch.</td><td>8-step loop: first token 1.99 &rarr; <b>1.34&nbsp;s</b>, output identical 8/8</td><td>Open; needs a rebase after an engine rework</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h2>What running Hermes all day taught me</h2>
+      <p>
+        Four findings, with how I checked each. I re-read every one against Hermes <code>main</code> today, and where
+        upstream has changed, I say so.
+      </p>
+      <p>
+        <b>A context window belongs to the running server, not the config.</b> I changed the server to 524,288 tokens over
+        4 slots (131,072 each), but two profiles still told the summarizer it had 65,536. Hermes lowered its compaction
+        threshold to fit and carried on with no error. Sessions compacted, failed to shrink, compacted again and reset: five
+        ended in under three hours, two of them 31 seconds apart. On Telegram it looked like the bot had stopped listening.
+        The 86,016 in the log was 122,880&nbsp;×&nbsp;0.7, which pointed to the exact key. The window is set in three places
+        per profile, and the alias wins.
+      </p>
+      <p>
+        <b>The compaction threshold has a floor.</b> Under a 512K window, Hermes raises any threshold below 0.75 to 0.75. That's
+        deliberate and commented in <code>agent/context_compressor.py</code>: lower values make compaction fire again every turn
+        or two. So my 0.50 had been 0.75 all along. I ran the compressor directly: 0.85 with a 0.35 target keeps 34,119
+        tokens per compaction instead of 21,504, with about the same room before the next one (63,365 tokens against 64,512).
+      </p>
+      <p>
+        <b>A database check said ok on a broken index.</b> The session database's full-text index was corrupt for 36 hours,
+        and three nightly jobs died trying to write to it. <code>PRAGMA integrity_check</code> passed. The FTS5
+        <code>integrity-check</code> command is the test that caught it. Hermes's in-place rebuild failed because the gateway
+        was still writing; the same rebuild with the gateway stopped took about a second and lost no rows. My repair script
+        now does that (back up, stop, rebuild, restart, at most three times a day) and runs every 10 minutes, so a corrupt
+        index lasts minutes, not a day and a half. The manual repair before it lost 235 messages, so the alert always reports
+        the message count.
+      </p>
+      <p>
+        <b>A retry loop multiplied one bad setting.</b> In July a Kanban worker hit a context-overflow 400 and was retried five
+        times per card: 18 crashes in 66 minutes of GPU time. Upstream has since added exit codes that park auth and
+        missing-model failures after one try, and the default failure limit is now 2.
+      </p>
+
+      <h2>One still open</h2>
+      <p>
+        On <code>main</code> today, a model whose name contains "deepseek" has an empty reasoning field replayed as a single
+        space (<code>agent/message_sanitization.py</code>). DeepSeek's API needs that: it rejects an empty value on a
+        tool-call turn. A local engine serving the same weights doesn't, and the space means the replayed turn no longer
+        matches what the model produced, from its first token on. On October 21 that was 14% of my thinking-on tool turns,
+        and each one missed the engine's warm state for that reply. Padding only on the hosts that need it, or letting a
+        custom provider turn it off, would fix it. I haven't filed it yet.
+      </p>
+
+      <h2>What I don't claim</h2>
+      <p>
+        The benchmark scores come from my own harness on my pair, not a leaderboard. The prefill numbers are the maintainers'
+        run. The Hermes findings come from one heavily used install with a local server whose settings change under it; a
+        cloud-backed setup may never see the first one. I'm not affiliated with Nous Research or MiaAI-Lab.
+      </p>
+
+      <p class="src">
+        Sources:
+        recipe <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks/blob/main/CREDITS.md">CREDITS.md</a> ·
+        PRs <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks/pull/5">#5</a>,
+        <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks/pull/44">#44</a>,
+        <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks/pull/43">#43</a>,
+        <a href="https://github.com/MiaAI-Lab/DeepSeek-v4.1-Flash-1017-2x-DGX-Sparks/pull/41">#41</a> ·
+        <a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a>
+      </p>
+    </main>
+    <footer>coinupbtc.xyz · <a href="https://github.com/Coinupbtc">GitHub</a> · <a href="https://x.com/coinupbtc">X</a></footer>
+  </div>
+</body>
+</html>
