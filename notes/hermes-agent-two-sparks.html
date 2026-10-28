@@ -137,10 +137,11 @@
       <p>
         On <code>main</code> today, a model whose name contains "deepseek" has an empty reasoning field replayed as a single
         space (<code>agent/message_sanitization.py</code>). DeepSeek's API needs that: it rejects an empty value on a
-        tool-call turn. A local engine serving the same weights doesn't, and the space means the replayed turn no longer
-        matches what the model produced, from its first token on. On October 21 that was 14% of my thinking-on tool turns,
-        and each one missed the engine's warm state for that reply. Padding only on the hosts that need it, or letting a
-        custom provider turn it off, would fix it. I haven't filed it yet.
+        tool-call turn. The rule also matches on the model's name, so it applies to my local engine too, and there the space
+        becomes part of the prompt: the replayed turn no longer matches what the model produced, from its first token on. On
+        October 21 that was 14% of my thinking-on tool turns, and each one missed the engine's warm state for that reply.
+        A setting that lets a local provider skip the pad would fix it, if the engine accepts the turn without it. I haven't
+        tested that yet, so I haven't filed it.
       </p>
 
       <h2>What I don't claim</h2>
