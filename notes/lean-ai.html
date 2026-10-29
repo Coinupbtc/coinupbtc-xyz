@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lean AI — coinupbtc.xyz</title>
+  <meta name="description" content="A quality engineer's waste walk through four months of Hermes Agent traffic: 7.6 billion tokens read to write 36 million. Half of what the agent reads is tool output it already read. The fix was already in Hermes, switched off.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f5f7f6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e1312" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://coinupbtc.xyz/notes/lean-ai.html">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/lab.css">
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c; --paper: #ece8df; --acid: #c8f54a;
+      --mute: #8b9287; --line: color-mix(in srgb, var(--paper) 14%, transparent);
+      --font-display: Fraunces, Georgia, "Times New Roman", serif;
+      --font-body: "IBM Plex Mono", ui-monospace, "Cascadia Code", monospace;
+      --pad: clamp(1.15rem, 4vw, 4rem);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body); background: var(--ink); color: var(--paper);
+      line-height: 1.7; font-size: .95rem; overflow-x: hidden;
+      padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px);
+    }
+    a { color: var(--acid); text-underline-offset: 4px; }
+    a:hover { color: var(--paper); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .wrap { width: min(760px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+    .top { padding: max(1rem, env(safe-area-inset-top, 0px)) 0 1rem; font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+    .top a { color: var(--mute); text-decoration: none; display: inline-flex; min-height: 44px; align-items: center; }
+    .top a:hover { color: var(--acid); }
+    h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 7vw, 3.4rem); line-height: 1; letter-spacing: -.03em; margin: 1.5rem 0 1rem; }
+    h2 { font-family: var(--font-display); font-weight: 500; font-size: 1.35rem; margin: 2.4rem 0 .6rem; }
+    p { margin: 0 0 1rem; }
+    .meta { color: var(--mute); font-size: .78rem; margin-bottom: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; font-size: .88rem; }
+    th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--line); }
+    th { color: var(--mute); font-weight: 500; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+    td b { color: var(--acid); font-weight: 500; }
+    td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+    code { background: var(--ink-2); padding: .1em .35em; border-radius: 3px; font-size: .9em; overflow-wrap: anywhere; }
+    .src { border-left: 2px solid var(--acid); padding-left: 1rem; color: var(--mute); font-size: .85rem; margin: 1.5rem 0; }
+    footer { margin: 3rem 0 2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: .75rem; color: var(--mute); }
+    .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .scroll table { min-width: 560px; }
+    .big { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 1.5rem 0 2rem; }
+    .big div { background: var(--ink); padding: .9rem 1rem; }
+    .big b { display: block; font-family: var(--font-display); font-size: 1.7rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .big span { font-size: .72rem; color: var(--mute); }
+    .big .hot b { color: var(--acid); }
+    .cta { display: flex; flex-wrap: wrap; gap: .6rem 1.4rem; margin: 1.2rem 0 1.6rem; }
+    .cta a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top"><a href="/">&larr; The lab</a></div>
+    <main>
+      <h1>Lean AI</h1>
+      <p class="meta">2026-10-29 · a waste walk through four months of Hermes Agent · pseudonymous</p>
+
+      <p>
+        In a factory, Lean starts on the floor. You walk the line, name the waste you see, measure each kind from the
+        record, then fix the cheapest big one and prove it moved. I do that for a living in medical-device quality. This
+        is the same walk through my <a href="hermes-agent-two-sparks.html">Hermes Agent</a> setup's own records: 2,621
+        sessions since June 28, every one on a local model on two DGX Sparks.
+      </p>
+
+      <div class="big">
+        <div><b>7.60 B</b><span>tokens read</span></div>
+        <div><b>36.0 M</b><span>tokens written</span></div>
+        <div><b>211</b><span>read per token written</span></div>
+        <div class="hot"><b>49%</b><span>of reads: old tool output</span></div>
+      </div>
+
+      <div class="cta">
+        <a href="../demos/lean-audit.html">Open the audit report &rarr;</a>
+        <a href="../demos/context-carry.html">Try the carry demo &rarr;</a>
+        <a href="https://github.com/Coinupbtc/lean-ai">Run it on your Hermes &rarr;</a>
+      </div>
+
+      <h2>Half of what it reads, it already read</h2>
+      <p>
+        An agent call doesn't send a question. It sends the whole session so far: the system prompt, every tool schema,
+        every earlier message, and every tool result. When the agent runs <code>cat</code> on a 6,000-token file at step 3,
+        those 6,000 tokens are read again at step 4, 5, 6 and every step after, until the session ends.
+      </p>
+      <p>
+        I rebuilt each session message by message and checked the rebuild against what Hermes itself recorded. It accounts
+        for 87–88% of the measured tokens; the rest is chat-template tokens, reasoning and context injected per turn, which
+        I report as "not rebuilt" rather than guess at. In that rebuild, <b style="color:var(--acid)">old tool output is
+        half of everything read</b>. On my main profile from Oct 20 to 28, <code>terminal</code> and
+        <code>read_file</code> results made up 73% of it, and each tool-output token was read 54 more times after it
+        first arrived.
+      </p>
+
+      <h2>The trend: what got better, and what didn't</h2>
+      <p>Whole house, by month. The tool reads only Hermes' own records, so this is the same ruler each month.</p>
+      <div class="scroll">
+      <table>
+        <thead><tr><th></th><th class="n">Jul</th><th class="n">Aug</th><th class="n">Sep</th><th class="n">Oct</th></tr></thead>
+        <tbody>
+          <tr><td>Tool calls that failed</td><td class="n">3.3%</td><td class="n">4.8%</td><td class="n">3.1%</td><td class="n"><b>1.4%</b></td></tr>
+          <tr><td>Repeat calls, same tool and arguments</td><td class="n">15.2%</td><td class="n">11.1%</td><td class="n">3.6%</td><td class="n"><b>2.6%</b></td></tr>
+          <tr><td>System prompt share of reads</td><td class="n">19.9%</td><td class="n">16.3%</td><td class="n">16.9%</td><td class="n"><b>10.9%</b></td></tr>
+          <tr><td>Old tool output share of reads</td><td class="n">39.6%</td><td class="n">46.6%</td><td class="n">54.3%</td><td class="n"><b>52.3%</b></td></tr>
+          <tr><td>Times each tool-output token is re-read</td><td class="n">14×</td><td class="n">49×</td><td class="n">71×</td><td class="n"><b>60×</b></td></tr>
+          <tr><td>Main-profile sessions ended by compaction</td><td class="n">71</td><td class="n">21</td><td class="n">2</td><td class="n"><b>0</b></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>
+        Failures and repeated motion fell two to six times as the stack matured. Carried inventory went the other way. The
+        context window grew to a million tokens, compaction stopped firing, and old tool output rode along for 60 more
+        steps instead of 14.
+      </p>
+
+      <h2>The waste walk</h2>
+      <p>Lean names eight wastes. Six have an honest, measurable twin in an agent loop. Main profile, Oct 20–28:</p>
+      <div class="scroll">
+      <table>
+        <thead><tr><th>Waste</th><th>In the agent</th><th class="n">Size</th></tr></thead>
+        <tbody>
+          <tr><td>Inventory (WIP)</td><td>Old tool output carried and re-read every call</td><td class="n"><b>50.8%</b> of reads</td></tr>
+          <tr><td>Overprocessing</td><td>System prompt (12.4K tokens) and 19 tool schemas (8.6K) re-sent every call</td><td class="n">15.4%</td></tr>
+          <tr><td>Waiting</td><td>Prompt the engine had to compute: a cache miss</td><td class="n">10.2%</td></tr>
+          <tr><td>Inspection</td><td>Scheduled checks that found nothing, after-session reviews</td><td class="n">3.6%</td></tr>
+          <tr><td>Defects</td><td>Tool calls the tool itself reported as failed</td><td class="n">1.0% of calls</td></tr>
+          <tr><td>Motion</td><td>The exact same call again in the same session</td><td class="n">1.0% of calls</td></tr>
+          <tr><td>Idle stock</td><td>Tool schemas sent every call: <code>clarify</code> never used, <code>skill_manage</code> 954 tokens per call for 3 uses in 10,369 calls</td><td class="n">2 never used</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h2>The countermeasure was already in Hermes</h2>
+      <p>
+        Hermes ships <code>compression.proactive_prune_tokens</code>. Past a trigger size it replaces tool results over 8,000
+        characters, outside the last few messages, with a one-line summary. The default is <code>0</code>, off, and the
+        comment beside it in Hermes' config says why it exists: the normal threshold "rarely fires on large windows, so old
+        tool output is re-sent every turn". That is exactly the curve in the table above.
+      </p>
+      <p>
+        Before switching it on, I replayed nine days of sessions under its rules. The replay used the summary size Hermes
+        really produces (a median of 44 characters over 400 real outputs) and the prompt-cache break each prune causes.
+      </p>
+      <div class="scroll">
+      <table>
+        <thead><tr><th class="n">Trigger</th><th class="n">Reads saved</th><th class="n">Cache breaks</th><th class="n">Extra recompute</th></tr></thead>
+        <tbody>
+          <tr><td class="n">32,000</td><td class="n">−21.7%</td><td class="n">349</td><td class="n">6.5 M</td></tr>
+          <tr><td class="n">48,000</td><td class="n"><b>−20.3%</b></td><td class="n">272</td><td class="n">6.5 M</td></tr>
+          <tr><td class="n">96,000</td><td class="n">−17.2%</td><td class="n">130</td><td class="n">5.6 M</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>
+        The recompute is small next to the 139 M tokens of cache misses that already happened in those nine days. Since
+        Oct 28 at 23:20 the main profile runs with a 48,000 trigger. A replay counts tokens; it can't know whether the agent
+        needed the text it lost. The live trial watches for that through two guards that should not move: repeat calls and
+        failed tool calls.
+      </p>
+
+      <h2>What this doesn't say</h2>
+      <p>
+        <b style="color:var(--acid)">Re-reading isn't expensive to compute here.</b> The engine's prefix cache serves most of
+        a request from memory, as my <a href="hermes-agent-two-sparks.html">earlier note</a> says. But carried tokens still fill
+        the window, still cost attention on every token generated, and on a paid API are billed at the cache-read rate.
+        Lean calls inventory waste even when the warehouse is free.
+      </p>
+      <p>
+        The rebuild doesn't model reasoning text, tool schemas are measured as of today, and cache misses are only judged
+        in sessions whose engine reports cache hits (September's mostly didn't, so it has no miss rate). Lead time is wall
+        time between stored messages, so a model step includes queueing. All of it is in the
+        <a href="https://github.com/Coinupbtc/lean-ai/blob/main/docs/METHOD.md">method</a>.
+      </p>
+
+      <p class="src">
+        Tool: <a href="https://github.com/Coinupbtc/lean-ai">github.com/Coinupbtc/lean-ai</a> (read-only, standard library,
+        11 tests on a hand-worked fixture) · reports: <a href="../demos/lean-audit.html">main profile, Oct 20–28</a> ·
+        Hermes: <code>agent/context_compressor_prune.py</code>, <code>hermes_cli/config_defaults.py</code> at
+        <code>bf0203a794</code>. I'm not affiliated with Nous Research.
+      </p>
+    </main>
+    <footer>coinupbtc.xyz · <a href="https://github.com/Coinupbtc">GitHub</a> · <a href="https://x.com/coinupbtc">X</a></footer>
+  </div>
+</body>
+</html>
