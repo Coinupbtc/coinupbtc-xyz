@@ -105,7 +105,8 @@
     <header class="top">
       <a class="brand" href="https://coinupbtc.com/">Coinupbtc <span>· Lab</span></a>
       <nav aria-label="Site">
-        <a href="#bench">Demos</a>
+        <a href="#bench">Play</a>
+        <a href="#bench2">Bench</a>
         <a href="#notes">Notes</a>
         <a href="https://coinupbtc.com/">coinupbtc.com</a>
         <a href="https://github.com/Coinupbtc">GitHub</a>
@@ -115,52 +116,77 @@
     <main id="main">
       <div class="hero">
         <p class="label">The lab</p>
-        <h1>Small demos you can run in your browser</h1>
-        <p>Each one shows how something behaves, and where I measured it on my own machines, the number links to the file. For who I am and the work behind this, start at <a href="https://coinupbtc.com/">coinupbtc.com</a>.</p>
+        <h1>Things to play with, and things I measured</h1>
+        <p>Toys first, instruments second. Where a number was measured on my own machines, it links to the file. For who I am and the work behind this, start at <a href="https://coinupbtc.com/">coinupbtc.com</a>.</p>
       </div>
 
       <section id="bench" aria-labelledby="bench-h">
         <div class="sec-head">
-          <p class="label">The bench</p>
-          <h2 id="bench-h">Five demos</h2>
+          <p class="label">Play</p>
+          <h2 id="bench-h">Four things to play with</h2>
         </div>
         <ul class="bench">
-          <li class="unit" id="unit-context-carry">
-            <p class="label">Agent efficiency</p>
-            <h3>Context carry</h3>
-            <p class="what">Every agent step re-reads the whole session, every tool result included. Watch old tool output pile up step by step, then turn on clearing it and see what that saves.</p>
-            <p class="measured"><span class="label">Measured</span> <span>On my agent, <span class="num">50.8%</span> of everything read was old tool output, each token re-read <span class="num">54×</span>.</span> <a href="demos/lean-audit.html">The audit</a></p>
-            <a class="open" href="demos/context-carry.html">Open the demo <span aria-hidden="true">→</span></a>
+          <li class="unit" id="unit-blockfield">
+            <p class="label">Live data</p>
+            <h3>Blockfield</h3>
+            <p class="what">The Bitcoin mempool as a block war: the next three blocks fighting for fee bands, live, with inscriptions floating through. Refreshes itself; nothing to configure.</p>
+            <p class="measured"><span class="label">Live</span> <span>Reads mempool.space every few seconds. The purge floor, hashrate and halving countdown are the real numbers right now.</span></p>
+            <a class="open" href="https://coinupbtc.com/bitcoin-blockfield/">Watch it <span aria-hidden="true">→</span></a>
           </li>
-          <li class="unit" id="unit-spec-decode">
-            <p class="label">AI serving</p>
-            <h3>Speculative decoding</h3>
-            <p class="what">A small model drafts the next few words and the big model checks them all in one pass. Move the sliders to see when drafting saves time and when it costs time.</p>
-            <p class="measured"><span class="label">Measured</span> <span>On a copy-heavy refactor, <span class="num">34.33 → 74.48</span> tokens per second.</span> <a href="https://github.com/Coinupbtc/miaai35-tune/blob/main/REPORT.md#9-addendum-2026-07-09-v3-pass13-ngram-speculative-decode--kept--balanced-v3">Report §9</a></p>
-            <a class="open" href="demos/spec-decode.html">Open the demo <span aria-hidden="true">→</span></a>
+          <li class="unit" id="unit-falling-sand">
+            <p class="label">Toy</p>
+            <h3>Falling sand</h3>
+            <p class="what">Draw with sand, water, stone, wood and fire and let them react. Drop little people in and build them a bridge. A chemistry set with no cleanup.</p>
+            <p class="measured"><span class="label">Try</span> <span>Pick 👤 Person, draw a floor, then light a fire under the wood.</span></p>
+            <a class="open" href="https://coinupbtc.com/falling-sand/">Play it <span aria-hidden="true">→</span></a>
           </li>
-          <li class="unit" id="unit-memory-pack">
-            <p class="label">Capacity planning</p>
-            <h3>Memory packer</h3>
-            <p class="what">Pick one, two or three DGX Spark machines and the models you want to run, and see whether they fit. Each machine has its own memory; two machines are not one big pool.</p>
-            <p class="measured"><span class="label">Measured</span> <span><span class="num">121</span> GiB per machine; the video model holds <span class="num">89.42</span> GiB on one after loading.</span> <a href="https://github.com/Coinupbtc/MiniMax-H3-2x-DGX-Spark/blob/main/docs/RESULTS.md#load-profile">Results</a></p>
-            <a class="open" href="demos/memory-pack.html">Open the demo <span aria-hidden="true">→</span></a>
+          <li class="unit" id="unit-gravity-lander">
+            <p class="label">Game</p>
+            <h3>Gravity lander</h3>
+            <p class="what">Land on the moon from your phone. Thrust is a thumb, the fuel is real, and the ground is less forgiving than it looks.</p>
+            <p class="measured"><span class="label">Try</span> <span>Built phone-first in Three.js; works in landscape and portrait.</span></p>
+            <a class="open" href="https://coinupbtc.com/gravity-lander/">Fly it <span aria-hidden="true">→</span></a>
           </li>
-          <li class="unit" id="unit-render-cost">
-            <p class="label">Performance</p>
-            <h3>Render cost</h3>
-            <p class="what">Selecting one row used to rebuild every row in the list. This runs the bug and the fix side by side and times both in your browser.</p>
-            <p class="measured"><span class="label">Measured</span> <span>In the real app: <span class="num">13 s</span> before the fix, <span class="num">7.5 ms</span> after, at <span class="num">516</span> records.</span></p>
-            <a class="open" href="demos/render-cost.html">Open the demo <span aria-hidden="true">→</span></a>
-          </li>
-          <li class="unit" id="unit-moire">
+<li class="unit" id="unit-moire">
             <p class="label">Measurement</p>
             <h3>Moiré bench</h3>
             <p class="what">Two grids that almost line up. The pattern you see is where they disagree. A vernier caliper reads small differences the same way: a tiny mismatch between two scales becomes easy to see.</p>
             <p class="measured"><span class="label">Try</span> <span>Move one layer’s spacing by a single 1% step and watch the pattern shift a long way.</span></p>
             <a class="open" href="demos/moire.html">Open the demo <span aria-hidden="true">→</span></a>
-          </li>
-        </ul>
+          </li>        </ul>
+      </section>
+
+      <section id="bench2" aria-labelledby="bench2-h">
+        <div class="sec-head">
+          <p class="label">The bench</p>
+          <h2 id="bench2-h">Four things measured</h2>
+        </div>
+        <ul class="bench">
+<li class="unit" id="unit-render-cost">
+            <p class="label">Performance</p>
+            <h3>Render cost</h3>
+            <p class="what">Selecting one row used to rebuild every row in the list. This runs the bug and the fix side by side and times both in your browser.</p>
+            <p class="measured"><span class="label">Measured</span> <span>In the real app: <span class="num">13 s</span> before the fix, <span class="num">7.5 ms</span> after, at <span class="num">516</span> records.</span></p>
+            <a class="open" href="demos/render-cost.html">Open the demo <span aria-hidden="true">→</span></a>
+          </li><li class="unit" id="unit-spec-decode">
+            <p class="label">AI serving</p>
+            <h3>Speculative decoding</h3>
+            <p class="what">A small model drafts the next few words and the big model checks them all in one pass. Move the sliders to see when drafting saves time and when it costs time.</p>
+            <p class="measured"><span class="label">Measured</span> <span>On a copy-heavy refactor, <span class="num">34.33 → 74.48</span> tokens per second.</span> <a href="https://github.com/Coinupbtc/miaai35-tune/blob/main/REPORT.md#9-addendum-2026-07-09-v3-pass13-ngram-speculative-decode--kept--balanced-v3">Report §9</a></p>
+            <a class="open" href="demos/spec-decode.html">Open the demo <span aria-hidden="true">→</span></a>
+          </li><li class="unit" id="unit-memory-pack">
+            <p class="label">Capacity planning</p>
+            <h3>Memory packer</h3>
+            <p class="what">Pick one, two or three DGX Spark machines and the models you want to run, and see whether they fit. Each machine has its own memory; two machines are not one big pool.</p>
+            <p class="measured"><span class="label">Measured</span> <span><span class="num">121</span> GiB per machine; the video model holds <span class="num">89.42</span> GiB on one after loading.</span> <a href="https://github.com/Coinupbtc/MiniMax-H3-2x-DGX-Spark/blob/main/docs/RESULTS.md#load-profile">Results</a></p>
+            <a class="open" href="demos/memory-pack.html">Open the demo <span aria-hidden="true">→</span></a>
+          </li><li class="unit" id="unit-context-carry">
+            <p class="label">Agent efficiency</p>
+            <h3>Context carry</h3>
+            <p class="what">Every agent step re-reads the whole session, every tool result included. Watch old tool output pile up step by step, then turn on clearing it and see what that saves.</p>
+            <p class="measured"><span class="label">Measured</span> <span>On my agent, <span class="num">50.8%</span> of everything read was old tool output, each token re-read <span class="num">54×</span>.</span> <a href="demos/lean-audit.html">The audit</a></p>
+            <a class="open" href="demos/context-carry.html">Open the demo <span aria-hidden="true">→</span></a>
+          </li>        </ul>
       </section>
 
       <section id="notes" aria-labelledby="notes-h">
