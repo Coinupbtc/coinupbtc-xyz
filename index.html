@@ -122,9 +122,16 @@
       <section id="bench" aria-labelledby="bench-h">
         <div class="sec-head">
           <p class="label">The bench</p>
-          <h2 id="bench-h">Four demos</h2>
+          <h2 id="bench-h">Five demos</h2>
         </div>
         <ul class="bench">
+          <li class="unit" id="unit-context-carry">
+            <p class="label">Agent efficiency</p>
+            <h3>Context carry</h3>
+            <p class="what">Every agent step re-reads the whole session, every tool result included. Watch old tool output pile up step by step, then turn on clearing it and see what that saves.</p>
+            <p class="measured"><span class="label">Measured</span> <span>On my agent, <span class="num">50.8%</span> of everything read was old tool output, each token re-read <span class="num">54×</span>.</span> <a href="demos/lean-audit.html">The audit</a></p>
+            <a class="open" href="demos/context-carry.html">Open the demo <span aria-hidden="true">→</span></a>
+          </li>
           <li class="unit" id="unit-spec-decode">
             <p class="label">AI serving</p>
             <h3>Speculative decoding</h3>
@@ -162,6 +169,7 @@
           <h2 id="notes-h">Write-ups</h2>
         </div>
         <ul class="notes">
+          <li><a href="notes/lean-ai.html">Lean AI</a><p>A quality engineer's waste walk through four months of Hermes Agent: 7.6 billion tokens read to write 36 million. Half of what it reads is tool output it already read, and the fix was already in Hermes, switched off.</p></li>
           <li><a href="notes/hermes-agent-two-sparks.html">Hermes Agent on two DGX Sparks</a><p>Four months of Nous Research's agent on a local DeepSeek-V4.1 pair: what runs, the three engine patches now upstream, and four lessons from running Hermes all day, checked against today's code.</p></li>
           <li><a href="notes/prefill-interleave.html">A 90-second stall, fixed</a><p>One long prompt stalled every live conversation on a two-machine setup, for two minutes on mine. I wrote the patch and it was merged upstream. The bug, the fix, and who measured what.</p></li>
         </ul>

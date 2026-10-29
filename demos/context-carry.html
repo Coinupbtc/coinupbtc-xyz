@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Context carry — coinupbtc.xyz</title>
+  <meta name="description" content="Why an AI agent reads 200 tokens for every one it writes: each step re-reads every tool result so far. Move the sliders, then turn on clearing old tool output.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="canonical" href="https://coinupbtc.xyz/demos/context-carry.html">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230c0e13'/%3E%3Crect x='4' y='22' width='24' height='6' fill='%23c8f54a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/lab.css">
+  <style>
+    :root {
+      --ink: #0c0e13; --ink-2: #12151c; --ink-3: #191d26;
+      --paper: #ece8df; --paper-2: #c9c5bc; --acid: #c8f54a; --hot: #ff6b5e; --cool: #63b6ff;
+      --mute: #8b9287; --dim: #5f6660;
+      --line: color-mix(in srgb, var(--paper) 14%, transparent); --line-soft: color-mix(in srgb, var(--paper) 7%, transparent);
+      --font-display: Fraunces, Georgia, serif;
+      --font-body: "IBM Plex Mono", ui-monospace, monospace;
+      --pad: clamp(1.15rem, 4vw, 3.5rem);
+      --c-fixed: #8a96a0; --c-talk: #c98a3c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--ink); color: var(--paper); line-height: 1.55; min-height: 100svh; display: flex; flex-direction: column; overflow-x: hidden; }
+    a { color: inherit; text-underline-offset: 4px; }
+    a:hover { color: var(--acid); }
+    :focus-visible { outline: 2px solid var(--acid); outline-offset: 3px; }
+    .wrap { width: min(1180px, 100%); margin-inline: auto; padding-inline: var(--pad); }
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute); padding: .6rem 0; border-bottom: 1px solid var(--line-soft); }
+    .top a { text-decoration: none; display: inline-flex; min-height: 44px; align-items: center; }
+    header { padding-block: clamp(2rem, 6vw, 3.4rem) 1.2rem; }
+    .idx { font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+    h1 { font-family: var(--font-display); font-weight: 700; letter-spacing: -.03em; font-size: clamp(2rem, 6.5vw, 3.6rem); line-height: 1; margin-top: .5rem; }
+    .lede { margin-top: 1.1rem; max-width: 68ch; color: var(--paper-2); font-size: .95rem; line-height: 1.75; }
+    .lede b { color: var(--paper); font-weight: 600; }
+    main { flex: 1; padding-bottom: clamp(3rem, 7vw, 5rem); }
+    .panel { border: 1px solid var(--line-soft); background: var(--ink-2); padding: clamp(1.1rem, 3vw, 1.7rem); margin-top: 1.4rem; }
+    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px,100%),1fr)); gap: 1.3rem 2rem; }
+    .ctl { display: flex; flex-direction: column; gap: .4rem; }
+    .ctl label { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+    .ctl .val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .ctl .val span { color: var(--mute); font-size: .55em; font-family: var(--font-mono, monospace); font-weight: 400; }
+    .ctl .hint { font-size: .72rem; color: var(--dim); line-height: 1.5; }
+    input[type=range] { width: 100%; accent-color: var(--acid); cursor: pointer; min-height: 44px; touch-action: manipulation; }
+    .toggle { display: flex; align-items: center; gap: .8rem; margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid var(--line-soft); flex-wrap: wrap; }
+    .toggle button { font: 600 .85rem var(--font-body); min-height: 44px; padding: 0 1.1rem; border: 1px solid var(--acid); background: transparent; color: var(--acid); cursor: pointer; border-radius: 3px; }
+    .toggle button[aria-pressed="true"] { background: var(--acid); color: var(--ink); }
+    .toggle .hint { font-size: .75rem; color: var(--mute); flex: 1; min-width: 220px; }
+    #trigWrap[hidden] { display: none; }
+    .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px,100%),1fr)); gap: 1px; background: var(--line-soft); margin-top: 1.4rem; border: 1px solid var(--line-soft); }
+    .res { background: var(--ink); padding: 1.1rem; }
+    .res dt { font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--mute); }
+    .res dd { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.5rem,4vw,2.05rem); line-height: 1.05; margin-top: .45rem; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .res dd.up { color: var(--acid); }
+    .res p { font-size: .72rem; color: var(--dim); margin-top: .4rem; line-height: 1.5; }
+    .chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .6rem; margin-top: 1.6rem; margin-bottom: .6rem; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+    .legend { display: flex; flex-wrap: wrap; gap: .4rem 1rem; text-transform: none; letter-spacing: .02em; font-size: .74rem; }
+    .legend i { display: inline-block; width: .75rem; height: .75rem; margin-right: .35rem; vertical-align: -1px; border-radius: 2px; }
+    svg { width: 100%; height: auto; display: block; background: var(--ink); border: 1px solid var(--line-soft); }
+    .measured { margin-top: 1.4rem; font-size: .85rem; color: var(--paper-2); border-left: 2px solid var(--acid); padding-left: 1rem; }
+    .measured b { color: var(--acid); font-weight: 600; }
+    footer { padding-block: 1.6rem 2.4rem; border-top: 1px solid var(--line-soft); font-size: .72rem; color: var(--mute); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top"><a href="/">&larr; The lab</a><a href="../notes/lean-ai.html">Lean AI note &rarr;</a></div>
+  </div>
+  <main class="wrap">
+    <header>
+      <p class="idx">Agent efficiency</p>
+      <h1>Context carry</h1>
+      <p class="lede">An agent step doesn't send a question. It sends <b>the whole session so far</b>: the system prompt, every tool
+      schema, and every tool result since the start. A file read at step 3 is read again at every later step. Move the
+      sliders and watch the pile grow, then turn on clearing old tool output.</p>
+    </header>
+
+    <section class="panel" aria-label="Session settings">
+      <div class="controls">
+        <div class="ctl">
+          <label for="steps">Steps in the session</label>
+          <div class="val"><output id="stepsV">40</output> <span>tool calls</span></div>
+          <input id="steps" type="range" min="5" max="200" step="1" value="40">
+          <p class="hint">My main profile, Oct 20–28: about 49 model calls per session.</p>
+        </div>
+        <div class="ctl">
+          <label for="out">Average tool result</label>
+          <div class="val"><output id="outV">1,500</output> <span>tokens</span></div>
+          <input id="out" type="range" min="100" max="8000" step="100" value="1500">
+          <p class="hint">A command's output or a file read. Sizes vary step to step around this average.</p>
+        </div>
+        <div class="ctl">
+          <label for="fixed">Fixed prefix</label>
+          <div class="val"><output id="fixedV">21,000</output> <span>tokens</span></div>
+          <input id="fixed" type="range" min="1000" max="40000" step="1000" value="21000">
+          <p class="hint">System prompt + tool schemas, sent every call. Mine: 12.4K + 8.6K.</p>
+        </div>
+      </div>
+      <div class="toggle">
+        <button id="prune" type="button" aria-pressed="false">Clear old tool output: off</button>
+        <div class="ctl" id="trigWrap" hidden style="min-width:220px;flex:1">
+          <label for="trig">Start clearing past</label>
+          <div class="val"><output id="trigV">48,000</output> <span>tokens</span></div>
+          <input id="trig" type="range" min="16000" max="200000" step="4000" value="48000">
+        </div>
+        <p class="hint" id="pruneHint">Hermes' <code>compression.proactive_prune_tokens</code>: past the trigger, results over 8,000
+          characters outside the last 6 messages become one-line summaries. Off by default.</p>
+      </div>
+    </section>
+
+    <dl class="results" aria-live="polite">
+      <div class="res"><dt>Read this session</dt><dd id="rRead">–</dd><p id="rReadP"></p></div>
+      <div class="res"><dt>Read per token written</dt><dd id="rRatio">–</dd><p>The agent writes ~150 tokens per step: a tool call or an answer.</p></div>
+      <div class="res"><dt>Old tool output share</dt><dd id="rWip" class="up">–</dd><p id="rWipP"></p></div>
+      <div class="res"><dt>Clearing saves</dt><dd id="rSave">–</dd><p id="rSaveP">Turn on clearing to compare.</p></div>
+    </dl>
+
+    <div class="chart-head">
+      <span>What each call reads, step by step</span>
+      <span class="legend">
+        <span><i style="background:var(--c-fixed)"></i>fixed prefix</span>
+        <span><i style="background:var(--c-talk)"></i>conversation</span>
+        <span><i style="background:var(--acid)"></i>old tool output</span>
+        <span><i style="background:var(--cool)"></i>newest result</span>
+      </span>
+    </div>
+    <svg id="chart" viewBox="0 0 1000 380" role="img" aria-label="Stacked bars of tokens read at each step"></svg>
+
+    <p class="measured">Measured on my own agent, Oct 20–28: <b>131,100</b> tokens read per call, <b>50.8%</b> of it old tool
+      output, each tool-output token re-read <b>54×</b>. <a href="lean-audit.html">The full audit &rarr;</a></p>
+  </main>
+  <footer class="wrap">A model, not a measurement: tool result sizes are drawn from a fixed lognormal so the chart is repeatable.
+    Same prune rules as <a href="https://github.com/Coinupbtc/lean-ai">leanaudit</a>'s replay. coinupbtc.xyz</footer>
+
+<script>
+(() => {
+  const REPLY = 150, USER = 200, KEEP = 6, MIN_TOK = Math.round(8000 / 3.5), STUB = 13, MIN_RECLAIM = 4096;
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => Math.round(n).toLocaleString('en-US');
+  const short = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : String(Math.round(n));
+  let pruneOn = false;
+
+  // Repeatable tool-result sizes: lognormal around 1, scaled by the average.
+  function sizes(n) {
+    let s = 7; const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const out = [];
+    for (let i = 0; i < n; i++) { const z = Math.sqrt(-2 * Math.log(rnd() + 1e-9)) * Math.cos(2 * Math.PI * rnd());
+      out.push(Math.exp(0.9 * z - 0.405)); }  // mean of exp(N(-0.405, 0.9^2)) = 1
+    return out;
+  }
+
+  function run(steps, avg, fixed, prune, trig) {
+    const mult = sizes(steps);
+    const msgs = [{ t: USER, tool: false }];  // {t: tokens now, tool, orig, pruned}
+    let rearm = 0, prunes = 0, recompute = 0;
+    const bars = [];
+    let read = 0, oldTool = 0, toolWritten = 0, toolCarried = 0;
+    for (let i = 0; i < steps; i++) {
+      // Model call i: decide to prune first (Hermes checks after each tool round), then read everything.
+      const hist = msgs.reduce((a, m) => a + m.t, 0);
+      if (prune && fixed + hist >= trig && fixed + hist >= rearm) {
+        const cut = msgs.length - KEEP;
+        const c = []; for (let j = 1; j < cut; j++) if (msgs[j].tool && !msgs[j].pruned && msgs[j].t >= MIN_TOK) c.push(j);
+        const reclaim = c.reduce((a, j) => a + msgs[j].t - STUB, 0);
+        if (c.length && reclaim >= MIN_RECLAIM) {
+          c.forEach(j => { msgs[j].t = STUB; msgs[j].pruned = true; });
+          recompute += msgs.slice(c[0]).reduce((a, m) => a + m.t, 0);
+          prunes++; rearm = fixed + hist - reclaim + Math.max(reclaim, trig, MIN_RECLAIM);
+        }
+      }
+      let talk = 0, old = 0, newest = 0;
+      msgs.forEach((m, j) => { if (!m.tool) talk += m.t; else if (j === msgs.length - 1) newest += m.t; else old += m.t; });
+      bars.push({ fixed, talk, old, newest, pruned: prunes });
+      read += fixed + talk + old + newest; oldTool += old; toolCarried += old + newest;
+      // The call writes a reply (a tool call), and the tool answers.
+      msgs.push({ t: REPLY, tool: false });
+      const o = Math.max(20, Math.round(avg * mult[i])); toolWritten += o;
+      msgs.push({ t: o, tool: true });
+    }
+    return { bars, read, written: REPLY * steps, oldShare: oldTool / read, reread: toolCarried / toolWritten, prunes, recompute };
+  }
+
+  function draw(bars, trig, prune) {
+    const svg = $('chart'), W = 1000, H = 380, padL = 54, padB = 26, padT = 12;
+    const max = Math.max(...bars.map(b => b.fixed + b.talk + b.old + b.newest), prune ? trig : 0) * 1.06;
+    const bw = (W - padL - 8) / bars.length, y = (v) => H - padB - (v / max) * (H - padB - padT);
+    let s = '';
+    for (let k = 0; k <= 4; k++) { const v = max * k / 4, yy = y(v);
+      s += `<line x1="${padL}" x2="${W}" y1="${yy}" y2="${yy}" stroke="var(--line-soft)"/>` +
+           `<text x="${padL - 8}" y="${yy + 4}" text-anchor="end" font-size="12" fill="var(--mute)" font-family="IBM Plex Mono, monospace">${short(v)}</text>`; }
+    bars.forEach((b, i) => { let base = 0; const x = padL + i * bw + bw * 0.12, w = Math.max(1, bw * 0.76);
+      [['fixed', 'var(--c-fixed)'], ['talk', 'var(--c-talk)'], ['old', 'var(--acid)'], ['newest', 'var(--cool)']].forEach(([k, c]) => {
+        const v = b[k]; if (!v) return; s += `<rect x="${x.toFixed(1)}" y="${y(base + v).toFixed(1)}" width="${w.toFixed(1)}" height="${(y(base) - y(base + v)).toFixed(1)}" fill="${c}"/>`; base += v; }); });
+    if (prune) s += `<line x1="${padL}" x2="${W}" y1="${y(trig)}" y2="${y(trig)}" stroke="var(--hot)" stroke-dasharray="6 5"/>` +
+      `<text x="${padL + 6}" y="${y(trig) - 6}" font-size="12" fill="var(--hot)" font-family="IBM Plex Mono, monospace">trigger</text>`;
+    s += `<text x="${padL}" y="${H - 6}" font-size="12" fill="var(--mute)" font-family="IBM Plex Mono, monospace">step 1</text>` +
+         `<text x="${W - 6}" y="${H - 6}" text-anchor="end" font-size="12" fill="var(--mute)" font-family="IBM Plex Mono, monospace">step ${bars.length}</text>`;
+    svg.innerHTML = s;
+  }
+
+  function update() {
+    const steps = +$('steps').value, avg = +$('out').value, fixed = +$('fixed').value, trig = +$('trig').value;
+    $('stepsV').textContent = steps; $('outV').textContent = fmt(avg); $('fixedV').textContent = fmt(fixed); $('trigV').textContent = fmt(trig);
+    const base = run(steps, avg, fixed, false, trig), now = pruneOn ? run(steps, avg, fixed, true, trig) : base;
+    $('rRead').textContent = short(now.read);
+    $('rReadP').textContent = `${fmt(now.read / steps)} per call on average.`;
+    $('rRatio').textContent = fmt(now.read / now.written);
+    $('rWip').textContent = (100 * now.oldShare).toFixed(1) + '%';
+    $('rWipP').textContent = `Each tool-result token is read about ${base.reread.toFixed(0)}× before the session ends.`;
+    if (pruneOn) {
+      const saved = 1 - now.read / base.read;
+      $('rSave').textContent = (saved > 0 ? '−' : '') + (100 * saved).toFixed(1) + '%';
+      $('rSave').className = saved > 0 ? 'up' : '';
+      $('rSaveP').textContent = now.prunes
+        ? `${now.prunes} clearing${now.prunes > 1 ? 's' : ''}, each a cache break: ${short(now.recompute)} tokens recomputed once.`
+        : 'Never fired: the context stayed under the trigger, or no result was big enough to clear.';
+    } else { $('rSave').textContent = '–'; $('rSave').className = ''; $('rSaveP').textContent = 'Turn on clearing to compare.'; }
+    draw(now.bars, trig, pruneOn);
+  }
+
+  $('prune').addEventListener('click', () => {
+    pruneOn = !pruneOn; $('prune').setAttribute('aria-pressed', pruneOn);
+    $('prune').textContent = 'Clear old tool output: ' + (pruneOn ? 'on' : 'off');
+    $('trigWrap').hidden = !pruneOn; update();
+  });
+  ['steps', 'out', 'fixed', 'trig'].forEach(id => $(id).addEventListener('input', update));
+  update();
+})();
+</script>
+</body>
+</html>
